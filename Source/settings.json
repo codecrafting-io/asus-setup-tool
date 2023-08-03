@@ -1,0 +1,11 @@
+{
+    "version": "0.1.0",
+    "AuraSyncUrl": "https://dlcdnets.asus.com/pub/ASUS/mb/14Utilities/Lighting_Control_1.07.79_V2.2.zip",
+    "AiSuite3Url": "https://dlcdnets.asus.com/pub/ASUS/mb/14Utilities/SW_ASUS_AISuite3_PPSU_EZ_SZ_TSD_W11_64_V30110_20220110R.zip",
+    "LiveDashUrl": "https://dlcdnets.asus.com/pub/ASUS/mb/14Utilities/LiveDash_1.05.06.zip",
+    "UninstallToolUrl": "https://dlcdnets.asus.com/pub/ASUS/mb/14Utilities/Armoury_Crate_Uninstall_Tool.zip",
+    "AuraSyncGuid": "{5899CD4F-8764-4303-A0D9-C60A62CFC24F}",
+    "LiveDashGuid": "{87861317-CC5D-4908-BFDC-639AFE9F3B4C}",
+    "GlckIODriverGuid": "{3507c756-a80f-4b0e-8475-975d8b432176}",
+    "GlckIO2DriverGuid": "{5960FD0F-BB3B-49AF-B175-F77DC91E995A}"
+}
