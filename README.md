@@ -1,6 +1,6 @@
 # ASUS Setup Tool
 
-![ASUS Setup Tool](source/images/title.png)
+![ASUS Setup Tool](/Source/Images/title.png?raw=true)
 
 This is an PowerShell script tool that manages the setup installation for the legacy [Aura Sync](https://www.ASUS.com/campaign/aura), LiveDash, [AiSuite3](https://www.youtube.com/watch?v=MVS2Bx8Uofg), to FINNALY resolve installation errors on Windows 11. With this tool, you will:
 
@@ -25,28 +25,28 @@ NOTE: Before you proceed, note that this tool is experimental, still in early st
 - For question prompts, `[Y] Yes [N] No` just type `Y` or `N` followed by `ENTER`
 - At this point, you should see a screen like that:
 
-    ![ASUS Setup Tool first screen](source/images/screen1.png)
+    ![ASUS Setup Tool first screen](/Source/Images/screen1.png?raw=true)
 
   - In case you see a PowerShell script policy error. Open the PowerShell as an Administrator, navigate to the directory where you extract the tool typing the command `CD "directory"`, then type `Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force`. Now still inside the PowerShell terminal type `.\Setup.bat`
 - Choose if you want to install LiveDash. <span style="color: orange; font-weight: bold;">Note that the installation of LiveDash implies using older Aura Sync dependencies in order to work, which may be incompatible with products released after 2020|2021. This will also affect AuraSync installation.</span>
 - The tools LiveDash (if you chose), AuraSync, AiSuite 3, Armoury Uninstall Tool. The AiSuite3 is downloaded for correctly setting some services, but installation is optional.
 - After the download and patches applied, you should see an option to choose which AuraSync modules you want to add. Mark the checkboxes for modules you want. AuraSync have a modular component design to control a variety of devices. By the default, the setup will install all modules even if you don't have the device. If you want a cleaner installation, you can check here which modules are relevant for your case. If you type `N` you should see the following screens:
 
-    ![ASUS Setup Tool add modules](source/images/screen2.png)
+    ![ASUS Setup Tool add modules](/Source/Images/screen2.png?raw=true)
 
   - Some modules for brand specific is usually to control RGB Ram with AuraSync. If you don't want to use AuraSync to control them, don't check
 - The uninstallation of all ASUS products will begin. This **will remove any related ASUS Software!**. During the uninstallation, the Armoury Crate Uninstall window will show up. This **process can take several minutes, please wait**.
 - After uninstallation, you should choose if you want to install the apps now. Use this if you only wanted to uninstall ASUS software.
 
-    ![ASUS Setup Tool installation step](source/images/screen3.png)
+    ![ASUS Setup Tool installation step](/Source/Images/screen3.png?raw=true)
 
 - Choose if you want to install AiSuite3. Notice that if you had AiSuite3 installed prior to executing ASUS Setup Tool, a reboot is required to proceed with manual installation. In this case, you can find AiSuite3 inside `Apps` folder.
 
-    ![ASUS Setup Tool AiSuite 3 installation](source/images/screen4.png)
+    ![ASUS Setup Tool AiSuite 3 installation](/Source/Images/screen4.png?raw=true)
 
 - You can choose to reboot system now (recommended) or later
 
-    ![ASUS Setup Tool AiSuite 3 reboot](source/images/screen5.png)
+    ![ASUS Setup Tool AiSuite 3 reboot](/Source/Images/screen5.png?raw=true)
 
 - Finally, if everything went well you now have a functional installation of AuraSync, LiveDash or AiSuite 3!
 
@@ -63,7 +63,7 @@ Besides that, some issues are known:
   - Go to the `Apps\AuraSync` folder of the ASUS Setup Tool and locate the `AuraServiceSetup.exe` file inside `LightingService` folder.
   - Run the setup to check if shows a button with `uninstall`. If so, uninstall and rerun the ASUS Setup Tool again.
 
-    ![ASUS Setup Tool LightingService uninstall](source/images/screen6.png)
+    ![ASUS Setup Tool LightingService uninstall](/Source/Images/screen6.png?raw=true)
 
 - ASUS Setup Tool in the momment is not fully compatible with the latest Aura Sync 1.07.84_v2
 
