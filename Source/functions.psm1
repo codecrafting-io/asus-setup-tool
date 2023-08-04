@@ -1,59 +1,112 @@
 <# ================================ FUNCTIONS ================================ #>
 
 <#
-    Handles Exception exit strategy
+.SYNOPSIS
+    Resolves error exit strategy
+
+.PARAMETER Exception
+    The Exception to be handle (mandatory)
+
+.PARAMETER Message
+    Optional exit message
+
+.EXAMPLE
+    Resolve-Error -Exception $_.Exception
+
+.EXAMPLE
+    Resolve-Error -Exception $_.Exception -Message 'Exit Message Here'
 #>
 function Resolve-Error {
 
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [Exception] $ex,
+        [Exception] $Exception,
 
-        [String] $message
+        [String] $Message
     )
 
-    Write-Debug $ex
-    Write-Host "`n$($ex.Message)" -ForegroundColor Red
-    Write-Host "`n$message" -ForegroundColor Red
+    Write-Debug $Exception
+    Write-Host "`n$($Exception.Message)" -ForegroundColor Red
+    Write-Host "`n$Message" -ForegroundColor Red
     Read-Host -Prompt "Press [ENTER] to exit"
 
     Exit
 }
 
+<#
+.SYNOPSIS
+    Converts unicode string to Int32 system emoji
+
+.PARAMETER Unicode
+The unicode string. Cannot be null or empty
+
+.OUTPUTS
+    The converted string emoji
+
+.EXAMPLE
+    Convert-UnicodeToEmoji -Unicode '1F389'
+#>
 function Convert-UnicodeToEmoji {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $unicode
+        [String][ValidateNotNullOrEmpty()] $Unicode
     )
 
-    return [System.Char]::ConvertFromUtf32([System.Convert]::toInt32($unicode, 16))
+    return [System.Char]::ConvertFromUtf32([System.Convert]::toInt32($Unicode, 16))
 }
 
+<#
+.SYNOPSIS
+    Importe configuration from settings.json file to global variables
+
+.EXAMPLE
+    Import-Config
+
+.NOTES
+    The global variables created are:
+    AsusSetupToolVersion
+    AuraSyncUrl
+    AiSuite3Url
+    LiveDashUrl
+    UninstallToolUrl
+    AuraSyncGuid
+    LiveDashGuid
+    GlckIODriverGuid
+    GlckIO2DriverGuid
+    UserSID
+#>
 function Import-Config {
 
     try {
-        $settings = Get-Content -Raw '..\Source\settings.json' | ConvertFrom-Json -ErrorAction Stop
-        Write-Information $settings
+        $Settings = Get-Content -Raw '..\Source\settings.json' | ConvertFrom-Json -ErrorAction Stop
+        Write-Information $Settings
     } catch {
         Resolve-Error $_.Exception 'failed to load configuration file'
     }
 
-    $Global:AsusSetupToolVersion = $settings.version
-    $Global:AuraSyncUrl = $settings.AuraSyncUrl
-    $Global:AiSuite3Url = $settings.AiSuite3Url
-    $Global:LiveDashUrl = $settings.LiveDashUrl
-    $Global:UninstallToolUrl = $settings.UninstallToolUrl
-    $Global:AuraSyncGuid = $settings.AuraSyncGuid
-    $Global:LiveDashGuid = $settings.LiveDashGuid
-    $Global:GlckIODriverGuid = $settings.GlckIODriverGuid
-    $Global:GlckIO2DriverGuid = $settings.GlckIO2DriverGuid
+    $Global:AsusSetupToolVersion = $Settings.version
+    $Global:AuraSyncUrl = $Settings.AuraSyncUrl
+    $Global:AiSuite3Url = $Settings.AiSuite3Url
+    $Global:LiveDashUrl = $Settings.LiveDashUrl
+    $Global:UninstallToolUrl = $Settings.UninstallToolUrl
+    $Global:AuraSyncGuid = $Settings.AuraSyncGuid
+    $Global:LiveDashGuid = $Settings.LiveDashGuid
+    $Global:GlckIODriverGuid = $Settings.GlckIODriverGuid
+    $Global:GlckIO2DriverGuid = $Settings.GlckIO2DriverGuid
     $Global:UserSID = Get-UserSID
 }
 
+<#
+.SYNOPSIS
+    Write to the console the application header ASCII Art Title
+
+.EXAMPLE
+    Write-HeaderTitle
+#>
 function Write-HeaderTitle {
-    $emoji = Convert-UnicodeToEmoji '1F680'
+    $Emoji = Convert-UnicodeToEmoji '1F680'
     Write-Host "
     ___   _____ __  _______    _____      __                 ______            __
    /   | / ___// / / / ___/   / ___/___  / /___  ______     /_  __/___  ____  / /
@@ -61,185 +114,287 @@ function Write-HeaderTitle {
  / ___ |___/ / /_/ /___/ /   ___/ /  __/ /_/ /_/ / /_/ /    / / / /_/ / /_/ / /
 /_/  |_/____/\____//____/   /____/\___/\__/\__,_/ .___/    /_/  \____/\____/_/
                                                /_/
-    version: $emoji $AsusSetupToolversion $emoji
+    version: $Emoji $AsusSetupToolversion $Emoji
     author: CodeCrafting-io
     " -ForegroundColor Cyan
 }
 
+<#
+.SYNOPSIS
+    Check whether current system is Windows 11 or not
+
+.OUTPUTS
+    Returns $True or $False if current system is Windows 11 or not
+
+.EXAMPLE
+    Get-IsWindows11
+#>
 function Get-IsWindows11 {
-    $buildVersion = $([System.Environment]::OSVersion.Version.Build)
-    if ($buildVersion -ge '22000') {
-        return $true
+    $BuildVersion = $([System.Environment]::OSVersion.Version.Build)
+    if ($BuildVersion -ge '22000') {
+        return $True
     }
 
-    return $false
+    return $False
 }
 
+<#
+.SYNOPSIS
+    Remove Folder and its contents. If some file could not be deleted the script continues to next file
+
+.PARAMETER Path
+    The Path file string to be removed (mandatory)
+
+.PARAMETER RemoveContainer
+    Remove the folder container. This is $False by default
+
+.EXAMPLE
+    Remove-FileFolder -Path 'File Path'
+
+.EXAMPLE
+    Remove-FileFolder -Path 'File Path' -RemoveContainer $True
+
+.NOTES
+    Only the last error is thrown
+#>
 function Remove-FileFolder {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $path,
+        [String][ValidateNotNullOrEmpty()] $Path,
 
-        [bool] $removeContainer = $false
+        [bool] $RemoveContainer = $False
     )
 
-    $files = Get-ChildItem $path -Recurse
-    $lastException = $null
-    foreach ($file in $files) {
+    $Files = Get-ChildItem $Path -Recurse
+    $LastException = $null
+    foreach ($File in $Files) {
         try {
-            Remove-Item $file.FullName -Force -Recurse -ErrorAction Stop
+            Remove-Item $File.FullName -Force -Recurse -ErrorAction Stop
         } catch {
-            $lastException = $_.Exception
+            $LastException = $_.Exception
         }
     }
-    if ($removeContainer) {
-        Remove-Item -Path $path -Force -Recurse
+    if ($RemoveContainer) {
+        Remove-Item -Path $Path -Force -Recurse
     }
-    if ($lastException) {
-        throw $lastException
+    if ($LastException) {
+        throw $LastException
     }
 }
 
+<#
+.SYNOPSIS
+    Prints a colored string to the console before a empty ReadHost
+
+.PARAMETER Message
+The message to be printed (mandatory)
+
+.PARAMETER ForegroundColor
+The color of the message (mandatory)
+
+.EXAMPLE
+    Read-HostColor -Message 'Message' -ForegroundColor Green
+#>
 function Read-HostColor {
 
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [String] $message,
+        [String] $Message,
 
         [Parameter(Mandatory)]
         [String] $ForegroundColor
     )
 
-    Write-Host $message -ForegroundColor $ForegroundColor
+    Write-Host $Message -ForegroundColor $ForegroundColor
     Read-Host
 }
 
 
 <#
-    Copy Item showing a progress. Returns true if successfull or throw a exception if failed
+    Copy Item showing a progress. Returns true if successfull or throw an exception if failed
+#>
+<#
+.SYNOPSIS
+    Copy Item showing a progress.
+
+.PARAMETER Source
+    The source path to be copied (Mandatory)
+
+.PARAMETER Target
+    The target path to be copied (Mandatory)
+
+.PARAMETER Message
+    The actitivy message (Mandatory)
+
+.PARAMETER ShowFileProgress
+    Shows amount of progress of files copied (optional). Default is $True
+
+.PARAMETER ShowFiles
+    Shows the files beign copied (optional). Default is $False
+
+.OUTPUTS
+    Returns a Object with the information about the copy if successfull or throw a exception if failed
+
+.EXAMPLE
+    Copy-ItemWithProgress -Source 'Source' -Target 'Target' -Message 'Message'
+
+.EXAMPLE
+    Copy-ItemWithProgress -Source 'Source' -Target 'Target' -Message 'Message' -ShowFileProgress $False -ShowFiles $True
 #>
 function Copy-ItemWithProgress
 {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $source,
+        [String][ValidateNotNullOrEmpty()] $Source,
 
         [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $target,
+        [String][ValidateNotNullOrEmpty()] $Target,
 
         [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $message,
+        [String][ValidateNotNullOrEmpty()] $Message,
 
-        [bool] $showFileProgress = $true,
+        [bool] $ShowFileProgress = $True,
 
-        [bool] $showFiles = $false
+        [bool] $ShowFiles = $False
     )
 
     $startTime = Get-Date
 
-    if ($source.Length -lt 2) {
-        Throw "source path '$source' is invalid"
-    } elseif ($source[$source.Length - 1] -eq "\") {
-        $source = $source.Substring(0, $source.Length - 1)
+    if ($Source.Length -lt 2) {
+        Throw "source path '$Source' is invalid"
+    } elseif ($Source[$Source.Length - 1] -eq "\") {
+        $Source = $Source.Substring(0, $Source.Length - 1)
     }
 
-    if ($target.Length -lt 2) {
-        Throw "target path '$target' is invalid"
-    } elseif ($target[$target.Length - 1] -eq "\") {
-        $target = $target.Substring(0, $target.Length - 1)
+    if ($Target.Length -lt 2) {
+        Throw "target path '$Target' is invalid"
+    } elseif ($Target[$Target.Length - 1] -eq "\") {
+        $Target = $Target.Substring(0, $Target.Length - 1)
     }
 
-    $filelist = Get-ChildItem "$Source" -Recurse
-    $sourceFullpath = (Resolve-Path $source).Path
-    $sourceBasepath = $sourceFullpath.Split("\")[-1]
-    $total = $filelist.Count
-    $position = 0
+    $FileList = Get-ChildItem "$Source" -Recurse
+    $SourceFullpath = (Resolve-Path $Source).Path
+    $SourceBasepath = $SourceFullpath.Split("\")[-1]
+    $Total = $FileList.Count
+    $Position = 0
 
     <#
         Loop through files checking for optional parts. Not sure if there is a faster way
     #>
-    foreach ($file in $filelist) {
-        #$targetFile = [Management.Automation.WildcardPattern]::Escape($target + "\" + $source + "\" + $file.FullName.Replace($sourceFullpath, ""))
-        $targetFile = $target + "\" + $sourceBasepath + "\" + $file.FullName.Replace($sourceFullpath + "\", "")
+    foreach ($File in $FileList) {
+        $TargetFile = $Target + "\" + $SourceBasepath + "\" + $File.FullName.Replace($SourceFullpath + "\", "")
 
-        $status = $null
-        if ($showFileProgress) {
-            $status = "$($position + 1)/$total itens"
+        $Status = $null
+        if ($ShowFileProgress) {
+            $Status = "$($Position + 1)/$Total itens"
         }
 
-        $currentOperation = $null
-        if ($showFiles) {
-            $currentOperation = $targetFile
+        $CurrentOperation = $null
+        if ($ShowFiles) {
+            $CurrentOperation = $TargetFile
         }
 
         try {
             #Copy-Item does not override folder itens, so they must me ignored when a targetFile folder already exists
-            if ((Test-Path -LiteralPath $file.FullName -PathType Leaf) -or -Not (Test-Path -LiteralPath $targetFile)) {
-                Copy-Item -LiteralPath $file.FullName "$targetFile" -Force -PassThru | Out-Null
+            if ((Test-Path -LiteralPath $File.FullName -PathType Leaf) -or -Not (Test-Path -LiteralPath $TargetFile)) {
+                Copy-Item -LiteralPath $File.FullName "$TargetFile" -Force -PassThru | Out-Null
             }
         } catch {
-            Write-Host "Failed to copy $targetFile" -ForegroundColor Red
+            Write-Host "Failed to copy $TargetFile" -ForegroundColor Red
             Throw $_.Exception
         }
 
-        Write-Progress -Activity $message -Status $status -CurrentOperation $currentOperation -PercentComplete (++$position / $total * 100)
+        Write-Progress -Activity $Message -Status $Status -CurrentOperation $CurrentOperation -PercentComplete (++$Position / $Total * 100)
     }
 
-    Write-Progress -Activity $message -Completed
+    Write-Progress -Activity $Message -Completed
 
     return [PSCustomObject]@{
         StartTime   = $startTime
         EndTime     = Get-Date
         Source      = $sourceFullpath
-        Target      = $target
-        Count       = $total
+        Target      = $Target
+        Count       = $Total
     }
 }
 
+<#
+.SYNOPSIS
+    Remove a System service or driver
+
+.PARAMETER Name
+The name of the service or Driver
+
+.EXAMPLE
+    Remove-LocalService -Name 'ServiceName'
+
+.LINK
+    Links to further documentation.
+
+.NOTES
+    Only works for the Drivers Asusgio2 or Asusgio3
+#>
 function Remove-LocalService {
 
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $name
+        [String][ValidateNotNullOrEmpty()] $Name
     )
 
     if (Get-Command 'Remove-Service' -errorAction SilentlyContinue) {
-        Remove-Service -Name $service
+        Remove-Service -Name $Service
     } else {
-        if (($name -eq 'Asusgio2') -or ($name -eq 'Asusgio3')) {
-            $service = Get-WmiObject -Class Win32_SystemDriver -Filter "Name='$name'"
+        if (($Name -eq 'Asusgio2') -or ($Name -eq 'Asusgio3') -or ($Name -eq 'GLCKIO2')) {
+            $Service = Get-WmiObject -Class Win32_SystemDriver -Filter "Name='$Name'"
         } else {
-            $service = Get-WmiObject -Class Win32_Service -Filter "Name='$name'"
+            $Service = Get-WmiObject -Class Win32_Service -Filter "Name='$Name'"
         }
-        $service.delete() | Out-Null
+        $Service.Delete() | Out-Null
     }
 }
 
 <#
-    Get the username SID
+.SYNOPSIS
+    Get the current LocalUser SID
+
+.OUTPUTS
+    Returns the currentLocalUser SID
+
+.EXAMPLE
+    Get-UserSID
 #>
 function Get-UserSID {
-    return (Get-LocalUser -Name $env:USERNAME).sid.value
+    return (Get-LocalUser -Name $Env:USERNAME).SID.Value
 }
 
-function Get-AsusSetup {
+<#
+.SYNOPSIS
+    Download and extract ASUS Setups
+
+.PARAMETER LiveDashUrl
+    The LiveDashUrl to be downloaded. If empty or $null LiveDash is skipped (Mandatory)
+
+.EXAMPLE
+    Get-ASUSSetup -LiveDashUrl 'LiveDashURL'
+#>
+function Get-ASUSSetup {
 
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [String] $liveDashUrl
+        [String] $LiveDashUrl
     )
 
     #This is first just to avoid possible user confusion
     #LIVEDASH
-    if ($liveDashUrl) {
+    if ($LiveDashUrl) {
         if (-Not (Test-Path '..\Apps\LiveDash.zip')) {
-            Write-Host 'downloading LiveDash...'
-            Invoke-WebRequest $liveDashUrl -OutFile '..\Apps\LiveDash.zip'
+            Write-Host 'Downloading LiveDash...'
+            Invoke-WebRequest $LiveDashUrl -OutFile '..\Apps\LiveDash.zip'
         } else {
             Write-Warning "LiveDash already downloaded. Extracting..."
         }
@@ -249,7 +404,7 @@ function Get-AsusSetup {
 
     #AISUITE
     if (-Not (Test-Path '..\Apps\AiSuite3.zip')) {
-        Write-Host "downloading AiSuite3 (installation optional)..."
+        Write-Host "Downloading AiSuite3 (installation optional)..."
         Invoke-WebRequest $AiSuite3Url -OutFile '..\Apps\AiSuite3.zip'
     } else {
         Write-Warning "AiSuite3 already downloaded (installation optional). Extracting..."
@@ -259,7 +414,7 @@ function Get-AsusSetup {
 
     #AuraSync
     if (-Not (Test-Path '..\Apps\AuraSync.zip')) {
-        Write-Host 'downloading AuraSync...'
+        Write-Host 'Downloading AuraSync...'
         Invoke-WebRequest $AuraSyncUrl -OutFile '..\Apps\AuraSync.zip'
     } else {
         Write-Warning "AuraSync already downloaded. Extracting..."
@@ -269,7 +424,7 @@ function Get-AsusSetup {
 
     #Armoury Uninstall Tool
     if (-Not (Test-Path '..\Apps\Uninstall.zip')) {
-        Write-Host 'downloading Armoury Crate Uninstall Tool...'
+        Write-Host 'Downloading Armoury Crate Uninstall Tool...'
         Invoke-WebRequest $UninstallToolUrl -OutFile '..\Apps\Uninstall.zip'
     } else {
         Write-Warning "Armoury Crate Uninstall Tool already downloaded. Extracting..."
@@ -285,17 +440,45 @@ function Get-AsusSetup {
 <#
     Clear and Nuke Asus Bloatware stuff
 #>
+<#
+.SYNOPSIS
+    Clear, Uninstall, Removes, Delete, Purge and Nuke Asus Bloatware
+
+.PARAMETER Exception
+    The Exception to be handle (mandatory)
+
+.PARAMETER Message
+    Optional exit message
+
+.INPUTS
+    Description of objects that can be piped to the script.
+
+.OUTPUTS
+    Description of objects that are output by the script.
+
+.EXAMPLE
+    Resolve-Error -Exception $_.Exception
+
+.EXAMPLE
+    Resolve-Error -Exception $_.Exception -Message 'Exit Message Here'
+
+.LINK
+    Links to further documentation.
+
+.NOTES
+    Detail on what the script does, if this is needed.
+#>
 function Clear-AsusBloat {
 
     [CmdletBinding()]
     PARAM()
 
-    $auraUninstaller = "${Env:ProgramFiles(x86)}\InstallShield Installation Information\$AuraSyncGuid"
-    $liveDashUninstaller = "${Env:ProgramFiles(x86)}\InstallShield Installation Information\$LiveDashGuid"
-    $aisuite3Path = "${Env:ProgramFiles(x86)}\Asus\AI Suite III\AISuite3.exe"
-    $glckioDriver = "${Env:ProgramData}\Package Cache\$GlckIODriverGuid\GlckIODrvSetup.exe"
+    $AuraUninstaller = "${Env:ProgramFiles(x86)}\InstallShield Installation Information\$AuraSyncGuid"
+    $LiveDashUninstaller = "${Env:ProgramFiles(x86)}\InstallShield Installation Information\$LiveDashGuid"
+    $AiSuite3Path = "${Env:ProgramFiles(x86)}\Asus\AI Suite III\AISuite3.exe"
+    $GlckIODriver = "${Env:ProgramData}\Package Cache\$GlckIODriverGuid\GlckIODrvSetup.exe"
 
-    $services = @(
+    $Services = @(
         'asComSvc'
         , 'aaHMSvc'
         , 'asHmComSvc'
@@ -311,7 +494,7 @@ function Clear-AsusBloat {
         , 'Asusgio2' #Asus Driver
         , 'Asusgio3' #Asus Driver
     )
-    $files = @(
+    $Files = @(
         "${Env:ProgramFiles(x86)}\ASUS"
         , "${Env:ProgramFiles(x86)}\LightingService"
         , "${Env:ProgramFiles(x86)}\ENE"
@@ -319,53 +502,52 @@ function Clear-AsusBloat {
         , "${Env:ProgramFiles}\ASUS"
         , "${Env:ProgramData}\ASUS"
         , "${Env:ProgramFiles(x86)}\InstallShield Installation Information"
-        , "$env:SystemRoot\System32\AsIO2.dll"
-        , "$env:SystemRoot\System32\AsIO3.dll"
-        , "$env:SystemRoot\System32\AsusDownLoadLicense.exe"
-        , "$env:SystemRoot\System32\AsusUpdateCheck.exe"
-        , "$env:SystemRoot\System32\drivers\AsIO2.sys"
-        , "$env:SystemRoot\System32\drivers\AsIO3.sys"
-        , "$env:SystemRoot\System32\drivers\GLCKIO2.sys"
-        , "$env:SystemRoot\SysWOW64\AsIO.dll"
-        , "$env:SystemRoot\SysWOW64\AsIO2.dll"
-        , "$env:SystemRoot\SysWOW64\AsIO3.dll"
-        , "$env:SystemRoot\SysWOW64\Drivers\AsIO.sys"
+        , "$Env:SystemRoot\System32\AsIO2.dll"
+        , "$Env:SystemRoot\System32\AsIO3.dll"
+        , "$Env:SystemRoot\System32\AsusDownLoadLicense.exe"
+        , "$Env:SystemRoot\System32\AsusUpdateCheck.exe"
+        , "$Env:SystemRoot\System32\drivers\AsIO2.sys"
+        , "$Env:SystemRoot\System32\drivers\AsIO3.sys"
+        , "$Env:SystemRoot\System32\drivers\GLCKIO2.sys"
+        , "$Env:SystemRoot\SysWOW64\AsIO.dll"
+        , "$Env:SystemRoot\SysWOW64\AsIO2.dll"
+        , "$Env:SystemRoot\SysWOW64\AsIO3.dll"
+        , "$Env:SystemRoot\SysWOW64\Drivers\AsIO.sys"
         , "${Env:ProgramData}\Package Cache\{5960FD0F-BB3B-49AF-B175-F77DC91E995A}v1.0.10"
         , "${Env:ProgramData}\Package Cache\{5960FD0F-BB3B-49AF-B175-F77DC91E995A}v1.0.20"
     )
-    $registries = Get-Content '..\Source\registries.txt' | Where-Object { $_.Trim() -ne '' }
+    $Registries = Get-Content '..\Source\registries.txt' | Where-Object { $_.Trim() -ne '' }
 
-    Write-Output 'uninstall apps (please wait, this can take a while)...'
+    Write-Output 'Uninstall apps (please wait, this can take a while)...'
     try {
 
-        if (Test-Path $aisuite3Path) {
-            Write-Host 'uninstalling AiSuite 3...'
+        if (Test-Path $AiSuite3Path) {
+            Write-Host 'Uninstalling AiSuite 3...'
             Start-Process "${Env:ProgramData}\ASUS\AI Suite III\Setup.exe" -ArgumentList '-u -s' -Wait
-            #Start-Process '..\Apps\AiSuite3\AsusSetup.exe' -ArgumentList '/x /s /norestart' -Wait
             Start-Sleep 1
         }
-        if (Test-Path "$liveDashUninstaller") {
-            Write-Host 'uninstalling LiveDash...'
+        if (Test-Path "$LiveDashUninstaller") {
+            Write-Host 'Uninstalling LiveDash...'
 
             #InstallShield Setup.exe is missing after silent install.
-            Copy-Item '.\Setups\Setup.exe' "$liveDashUninstaller\Setup.exe" -Force -ErrorAction Stop
-            Copy-Item '..\Source\uninstall-livedash.iss' "$liveDashUninstaller\uninstall.iss" -Force -ErrorAction Stop
-            Start-Process "$liveDashUninstaller\Setup.exe" -ArgumentList "-l0x9 -x -s -ARP -f1`"$liveDashUninstaller\uninstall.iss`"" -Wait
+            Copy-Item '.\Setups\Setup.exe' "$LiveDashUninstaller\Setup.exe" -Force -ErrorAction Stop
+            Copy-Item '..\Source\uninstall-livedash.iss' "$LiveDashUninstaller\uninstall.iss" -Force -ErrorAction Stop
+            Start-Process "$LiveDashUninstaller\Setup.exe" -ArgumentList "-l0x9 -x -s -ARP -f1`"$LiveDashUninstaller\uninstall.iss`"" -Wait
             Start-Sleep 1
         }
-        if (Test-Path "$auraUninstaller") {
-            Write-Host 'uninstalling AuraSync...'
+        if (Test-Path "$AuraUninstaller") {
+            Write-Host 'Uninstalling AuraSync...'
 
             #InstallShield Setup.exe is missing after silent install.
-            Copy-Item '.\Setups\Setup.exe' "$auraUninstaller\Setup.exe" -Force -ErrorAction Stop
-            Copy-Item '..\Source\uninstall-aurasync.iss' "$auraUninstaller\uninstall.iss" -Force -ErrorAction Stop
-            Start-Process "$auraUninstaller\Setup.exe" -ArgumentList "-l0x9 -x -s -ARP -f1`"$auraUninstaller\uninstall.iss`"" -Wait
+            Copy-Item '.\Setups\Setup.exe' "$AuraUninstaller\Setup.exe" -Force -ErrorAction Stop
+            Copy-Item '..\Source\uninstall-aurasync.iss' "$AuraUninstaller\uninstall.iss" -Force -ErrorAction Stop
+            Start-Process "$AuraUninstaller\Setup.exe" -ArgumentList "-l0x9 -x -s -ARP -f1`"$AuraUninstaller\uninstall.iss`"" -Wait
             Start-Sleep 1
         }
-        if (Test-Path $glckioDriver) {
-            Write-Host 'uninstalling glckio2...'
+        if (Test-Path $GlckIODriver) {
+            Write-Host 'Uninstalling GlckIO2...'
 
-            Start-Process $glckioDriver -ArgumentList '/uninstall /quiet' -Wait
+            Start-Process $GlckIODriver -ArgumentList '/uninstall /quiet' -Wait
             Start-Process "$env:SystemRoot\System32\msiexec.exe" -ArgumentList "/x $GlckIOD2riverGuid /quiet" -Wait
             Start-Sleep 1
         }
@@ -374,74 +556,73 @@ function Clear-AsusBloat {
         Resolve-Error $_.Exception 'Uninstall apps failed. Manual uninstallation may be required for Aura|LiveDash|AiSuite3'
     }
 
-    Write-Output 'running uninstall tool (please wait, this can take a while)...'
+    Write-Output 'Running Uninstall Tool (please wait, this can take a while)...'
     try {
-        $uninstallSetup = (Get-ChildItem '..\Apps\Uninstall\*Armoury Crate Uninstall Tool.exe' -Recurse).FullName
-        Start-Process $uninstallSetup -ArgumentList '-silent' -Wait
+        $UninstallSetup = (Get-ChildItem '..\Apps\Uninstall\*Armoury Crate Uninstall Tool.exe' -Recurse).FullName
+        Start-Process $UninstallSetup -ArgumentList '-silent' -Wait
 
         #Sometimes executing again lead to better results
-        Start-Process $uninstallSetup -ArgumentList '-silent' -Wait
-        Start-Sleep 2
+        Start-Process $UninstallSetup -ArgumentList '-silent' -Wait
+        Start-Sleep 1
     } catch {
         Resolve-Error $_.Exception 'Uninstall tool failed'
     }
 
-    Write-Output 'removing services...'
-    foreach ($service in $services) {
-        # Hide errors
+    Write-Output 'Removing services...'
+    foreach ($Service in $Services) {
+        Write-Information "Stopping service '$Service'"
         try {
-            Write-Information "Stopping service '$service'"
-            Stop-Service -Name "$service" -ErrorAction Stop
+            Stop-Service -Name "$Service" -ErrorAction Stop
         }
         catch {
             Write-Debug $_.Exception
         }
 
-        Write-Information "Removing service $service"
+        Write-Information "Removing service '$Service'"
         try {
-            Remove-LocalService -Name $service -ErrorAction Stop
+            Remove-LocalService -Name $Service -ErrorAction Stop
         } catch {
             Write-Debug $_.Exception
         }
     }
 
-    Write-Output 'removing tasks...'
+    Write-Output 'Removing tasks...'
     try {
         Write-Information 'Unregister tasks'
-        Unregister-ScheduledTask -TaskPath '\Asus\*' -Confirm:$false -ErrorAction Stop
+        Unregister-ScheduledTask -TaskPath '\Asus\*' -Confirm:$False -ErrorAction Stop
 
-        $sch = New-Object -ComObject Schedule.Service
-        $sch.connect()
-        $rootFolder = $sch.GetFolder("\")
-        $rootFolder.DeleteFolder("Asus", $null)
+        $Sch = New-Object -ComObject Schedule.Service
+        $Sch.Connect()
+        $RootFolder = $Sch.GetFolder("\")
+        $RootFolder.DeleteFolder('Asus', $Null)
 
         Write-Information 'Removing Task folder'
-        Remove-Item "$env:SystemRoot\System32\Asus" -ErrorAction Stop
+        Remove-Item "$Env:SystemRoot\System32\Asus" -ErrorAction Stop
     } catch {
         Write-Debug $_.Exception
     }
 
-    Write-Output 'removing remaining files...'
-    foreach ($file in $files) {
+    Write-Output 'Removing remaining files...'
+    foreach ($File in $Files) {
         try {
-            Write-Information "Removing '$file'"
+            Write-Information "Removing '$File'"
 
             #Will delete folder but don't stop on first error
-            Remove-FileFolder $file $true -ErrorAction Stop
+            Remove-FileFolder $File $True -ErrorAction Stop
         } catch {
             Write-Debug $_.Exception
         }
     }
 
-    Write-Output 'removing registries...'
-    foreach ($registry in $registries) {
+    Write-Output 'Removing registries...'
+    foreach ($Registry in $Registries) {
         try {
-            $registry = $registry.Replace('<usersid>', $UserSID)
-            $registry = $registry.Replace('<aurasyncguid>', $AuraSyncGuid)
-            $registry = $registry.Replace('<livedashguid>', $LiveDashGuid)
+            $Registry = $Registry.Replace('<usersid>', $UserSID)
+            $Registry = $Registry.Replace('<aurasyncguid>', $AuraSyncGuid)
+            $Registry = $Registry.Replace('<livedashguid>', $LiveDashGuid)
 
-            Write-Information "Removing '$registry'"
-            Remove-Item "Registry::$registry" -Recurse -Force -ErrorAction Stop
+            Write-Information "Removing '$Registry'"
+            Remove-Item "Registry::$Registry" -Recurse -Force -ErrorAction Stop
         } catch {
             Write-Debug $_.Exception
         }
@@ -450,73 +631,95 @@ function Clear-AsusBloat {
     Start-Process '.\Setups\AuraCleaner.exe' -Wait | Out-Null
 }
 
+<#
+.SYNOPSIS
+    Update and patch AuraModules. A dropdown for module selection is shown
+
+.PARAMETER ModulesPath
+    The path where the AuraSync modules are. (Mandatory)
+
+.PARAMETER HasLiveDash
+    To whether or not update modules based on older AuraSync (Optional, Defaults to $False)
+
+.EXAMPLE
+    Update-AuraModules -ModulesPath 'ModulesPath'
+
+.EXAMPLE
+    Update-AuraModules -ModulesPath 'ModulesPath' -HasLiveDash $True
+
+.NOTES
+    If HasLiveDash is $True and none of AacMBSetup.exe, AacDisplaySetup.exe AacAIOFanSetup.exe modules were selected AacMBSetup is added
+#>
 function Update-AuraModules {
 
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $modulesPath,
+        [String][ValidateNotNullOrEmpty()] $ModulesPath,
 
         [Parameter()]
-        [Boolean] $hasLiveDash
+        [Boolean] $HasLiveDash = $False
     )
 
-    $modules = Get-Content '..\Source\HalVersion.txt'
-
-    <#
-    if (-Not (Test-Path "$modulesPath\HalVersion.txt")) {
-        $modules = Get-Content '..\Source\HalVersion.txt'
-    } else {
-        $modules = Get-Content "$modulesPath\HalVersion.txt"
-    }
-    #>
-    $selected = Show-AuraDropdown
+    $Modules = Get-Content '..\Source\HalVersion.txt'
+    $Selected = Show-AuraDropdown
 
     # Mandatory modules
-    $selected.Add('AuraServiceSetup.exe')
-    if ($hasLiveDash -and -not ($selected.Contains('AacMBSetup.exe') -or $selected.Contains('AacDisplaySetup.exe') -or $selected.Contains('AacAIOFanSetup.exe'))) {
-        $selected.Add('AacMBSetup.exe')
+    $Selected.Add('AuraServiceSetup.exe')
+    if ($HasLiveDash -and -not ($Selected.Contains('AacMBSetup.exe') -or $Selected.Contains('AacDisplaySetup.exe') -or $Selected.Contains('AacAIOFanSetup.exe'))) {
+        $Selected.Add('AacMBSetup.exe')
     }
-    $newModules = @()
-    foreach ($module in $modules) {
+    $NewModules = @()
+    foreach ($Module in $Modules) {
         #Skip blank lines
-        if ($module.Length -gt 0) {
-            $moduleSetup = ($module.Substring(10, $module.IndexOf("]'s") - 10))
-            if ($selected.Contains($moduleSetup)) {
-                Write-Information ($moduleSetup + ' to keep')
-                $newModules += $module
+        if ($Module.Length -gt 0) {
+            $ModuleSetup = ($Module.Substring(10, $Module.IndexOf("]'s") - 10))
+            if ($Selected.Contains($ModuleSetup)) {
+                Write-Information ($ModuleSetup + ' to keep')
+                $NewModules += $Module
             } else {
                 try {
                     #Newer Aura versions have changed setup folder structure, this search for files
-                    Get-ChildItem "$modulesPath\aac\*$moduleSetup" -Recurse | Remove-Item -Force -ErrorAction Stop
-                    Write-Information ($moduleSetup + ' to remove')
+                    Get-ChildItem "$ModulesPath\aac\*$ModuleSetup" -Recurse | Remove-Item -Force -ErrorAction Stop
+                    Write-Information ($ModuleSetup + ' to remove')
                 } catch {
                     Write-Debug $_.Exception
                 }
             }
         }
     }
-    Out-File ($modulesPath + '\HalVersion.txt') -InputObject $newModules
+    Out-File ($ModulesPath + '\HalVersion.txt') -InputObject $NewModules
 }
 
+<#
+.SYNOPSIS
+    Builds and show window with multiple checkbox for module selection
+
+.OUTPUTS
+    Returns a Collections String List with the selected modules
+
+.EXAMPLE
+    Show-AuraDropdown -Exception $_.Exception
+
+.NOTES
+    Detail on what the script does, if this is needed.
+#>
 function Show-AuraDropdown {
-    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
-    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+    [void] [System.Reflection.Assembly]::LoadWithPartialName('System.Drawing')
+    [void] [System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
 
     $Form = New-Object System.Windows.Forms.Form
     $Form.Size = New-Object System.Drawing.Size(350,250)
-    $Form.text ="Choose AuraSync modules"
-    $labelFont = New-Object System.Drawing.Font('Segoe UI', 10)
+    $Form.text = 'Choose AuraSync modules'
+    $LabelFont = New-Object System.Drawing.Font('Segoe UI', 10)
 
-    ############################################## Start group boxes
-
-    $groupBox = New-Object System.Windows.Forms.GroupBox
-    $groupBox.Location = New-Object System.Drawing.Size(($Form.Size.Width - 50), 20)
-    $groupBox.Left = 10
-    $groupBox.Top = 5
-    $groupBox.text = "AuraSync modules"
-    $groupBox.Font = $labelFont
-    $Form.Controls.Add($groupBox)
+    $GroupBox = New-Object System.Windows.Forms.GroupBox
+    $GroupBox.Location = New-Object System.Drawing.Size(($Form.Size.Width - 50), 20)
+    $GroupBox.Left = 10
+    $GroupBox.Top = 5
+    $GroupBox.Text = 'AuraSync modules'
+    $GroupBox.Font = $LabelFont
+    $Form.Controls.Add($GroupBox)
 
     $options = [ordered]@{
         'AacAIOFanSetup.exe'='Asus AIO'
@@ -541,21 +744,21 @@ function Show-AuraDropdown {
     }
 
     $Checkboxes = @()
-    $y = 20
+    $Y = 20
 
-    foreach ($key in $options.Keys) {
+    foreach ($Key in $options.Keys) {
         $Checkbox = New-Object System.Windows.Forms.CheckBox
-        $Checkbox.Name = $key
-        $Checkbox.Text = $options[$key]
-        $Checkbox.Location = New-Object System.Drawing.Size(10, $y)
+        $Checkbox.Name = $Key
+        $Checkbox.Text = $options[$Key]
+        $Checkbox.Location = New-Object System.Drawing.Size(10, $Y)
         $Checkbox.Size = New-Object System.Drawing.Size(($Form.Size.Width - 70), 20)
-        $Checkbox.Font = $labelFont
-        $groupBox.Controls.Add($Checkbox)
+        $Checkbox.Font = $LabelFont
+        $GroupBox.Controls.Add($Checkbox)
         $Checkboxes += $Checkbox
-        $y += 30
+        $Y += 30
     }
 
-    $groupBox.size = New-Object System.Drawing.Size(($Form.Size.Width - 50), ($y + 50))
+    $GroupBox.Size = New-Object System.Drawing.Size(($Form.Size.Width - 50), ($y + 50))
     $closeButton = New-Object System.Windows.Forms.Button
     $closeButton.Location = New-Object System.Drawing.Size(10, $y)
     $closeButton.Size = New-Object System.Drawing.Size(($Form.Size.Width - 70), 35)
@@ -563,73 +766,63 @@ function Show-AuraDropdown {
     $closeButton.BackColor = '#145A99'
     $closeButton.ForeColor = '#FFFFFF'
     $closeButton.Font = New-Object System.Drawing.Font('Segoe UI', 12, [System.Drawing.FontStyle]::Bold)
-    $closeButton.add_click({ $Form.Close() })
-    $groupBox.Controls.Add($closeButton)
+    $closeButton.Add_Click({ $Form.Close() })
+    $GroupBox.Controls.Add($closeButton)
 
-    $Form.size = New-Object System.Drawing.Size(350, ($y + 120))
-    $form.ShowDialog() | Out-Null
+    $Form.Size = New-Object System.Drawing.Size(350, ($Y + 120))
+    $Form.ShowDialog() | Out-Null
 
-    $result = New-Object Collections.Generic.List[String]
+    $Result = New-Object Collections.Generic.List[String]
     foreach ($Checkbox in $Checkboxes) {
         if ($Checkbox.Checked) {
-            $Checkbox.Name.Split('-') | ForEach-Object { $result.Add($_) | Out-Null }
+            $Checkbox.Name.Split('-') | ForEach-Object { $Result.Add($_) | Out-Null }
         }
     }
 
     #Prevents pipe to cast ArrayList to Object
-    return ,$result
+    return ,$Result
 }
 
+<#
+.SYNOPSIS
+    Install ASUS Com and ASUS Cert Service
+
+.PARAMETER AiSuite3Path
+    THe AiSuite 3 setup path
+
+.PARAMETER Wait
+    The max amount of time in seconds to the AiSuite 3 window shows up
+
+.EXAMPLE
+    Set-AsusService -AiSuite3Path 'AiSuite3Path'
+
+.EXAMPLE
+    Set-AsusService -AiSuite3Path 'AiSuite3Path' -Wait 5
+
+.NOTES
+    Throws a exception if surpass the max amount of time defined by $Wait
+#>
 function Set-AsusService {
 
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $aisuitePath,
+        [String][ValidateNotNullOrEmpty()] $AiSuite3Path,
 
         [Parameter()]
-        [double] $wait = 10
+        [double] $Wait = 10
     )
 
-    Write-Host 'set asus basic services through AiSuite3 quick setup...'
-    $start = Get-Date
-    $setup = Start-Process $aisuitePath -PassThru
+    Write-Host 'Set ASUS basic services through AiSuite3 quick setup...'
+    $Start = Get-Date
+    $Setup = Start-Process $AiSuite3Path -PassThru
 
-    while (($setup.MainWindowTitle -ne 'AI Suite 3 Setup') -and (((Get-Date) - $start).Seconds -le $wait)) {
-        $setup = Get-Process -Id $setup.Id
+    while (($Setup.MainWindowTitle -ne 'AI Suite 3 Setup') -and (((Get-Date) - $Start).Seconds -le $Wait)) {
+        $Setup = Get-Process -Id $Setup.Id
     }
 
-    $setup.Kill()
-    if ($setup.MainWindowTitle -ne 'AI Suite 3 Setup') {
-        Throw 'failed to set Asus service'
+    $Setup.Kill()
+    if ($Setup.MainWindowTitle -ne 'AI Suite 3 Setup') {
+        Throw 'Failed to set Asus service'
     }
 }
-
-<#
-    Despite AsusCertService can execute without other services, something is missing here
-function Set-AsusService2 {
-
-    Write-Host 'setting ASIO drivers...'
-    Copy-Item '..\Source\ASIO2\AsIO2_64.dll' "$env:SystemRoot\system32\AsIO2.dll" -Force
-    Copy-Item '..\Source\ASIO2\AsIO2_64.sys' "$env:SystemRoot\system32\drivers\AsIO2.sys" -Force
-    Copy-Item '..\Source\ASIO3\AsIO3_64.dll' "$env:SystemRoot\system32\AsIO3.dll" -Force
-    Copy-Item '..\Source\ASIO3\AsIO3_64.sys' "$env:SystemRoot\system32\drivers\AsIO3.sys" -Force
-    sc.exe create 'Asusgio2' binPath="$env:SystemRoot\system32\drivers\AsIO2.sys" type=kernel | Out-Null
-    sc.exe create 'Asusgio3' binPath="$env:SystemRoot\system32\drivers\AsIO3.sys" type=kernel | Out-Null
-    Start-Service 'Asusgio2'
-    Start-Service 'Asusgio3'
-
-    Write-Host 'setting Asus Cert Service'
-    New-Item -ItemType Directory -Path "${Env:ProgramFiles(x86)}\Asus\AsusCertService" -Force | Out-Null
-    Copy-Item '..\Source\ASIO3\AsusCertService.exe' "${Env:ProgramFiles(x86)}\Asus\AsusCertService\AsusCertService.exe" -Force
-
-    # Stop any mmc that prevents recreating the service
-    try {
-        Stop-Process -Name 'mmc' -ErrorAction Stop | Out-Null
-    } catch {
-        Write-Debug $_.Exception
-    }
-    New-Service -Name 'AsusCertService' -DisplayName 'AsusCertService' -BinaryPathName "${Env:ProgramFiles(x86)}\Asus\AsusCertService\AsusCertService.exe" -StartupType  'auto' -DependsOn 'RpcSs' |
-    New-Service -Name 'asHmComSvc' -DisplayName 'ASUS HM Com Service' -BinaryPathName "${Env:ProgramFiles(x86)}\ASUS\AAHM\1.00.31\aaHMSvc.exe" -StartupType 'auto' -DependsOn 'RpcSs' | Out-Null
-}
-#>

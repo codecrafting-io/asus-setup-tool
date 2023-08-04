@@ -14,7 +14,7 @@ Import-Config
 Write-HeaderTitle
 
 
-$hasAiSuite = Test-Path "${Env:ProgramFiles(x86)}\Asus\AI Suite III\AISuite3.exe"
+$HasAiSuite = Test-Path "${Env:ProgramFiles(x86)}\Asus\AI Suite III\AISuite3.exe"
 try {
     New-Item '..\Apps' -ItemType Directory -Force | Out-Null
 } catch {
@@ -24,17 +24,17 @@ try {
 
 
 Write-Host "GET ASUS SETUP" -ForegroundColor green
-$isLiveDash = Read-Host 'do you want LiveDash (controls OLED screen)? [Y] Yes [N] No'
-if ($isLiveDash -eq 'Y') {
+$IsLiveDash = Read-Host 'Do you want LiveDash (controls OLED screen)? [Y] Yes [N] No'
+if ($IsLiveDash -eq 'Y') {
     Write-Warning 'LiveDash requirements may not be compatible with products **AFTER 2021**'
-    $auraPatch = '..\Patches\AuraSyncOld\*'
+    $AuraPatch = '..\Patches\AuraSyncOld\*'
 } else {
-    $auraPatch = '..\Patches\AuraSyncNew\*'
+    $AuraPatch = '..\Patches\AuraSyncNew\*'
     $LiveDashUrl = ''
 }
 
 try {
-    Get-AsusSetup $LiveDashUrl -ErrorAction Stop
+    Get-ASUSSetup $LiveDashUrl -ErrorAction Stop
 } catch {
     try {
         Remove-Item '..\Apps' -Force -Recurse -ErrorAction Stop
@@ -44,37 +44,37 @@ try {
     Resolve-Error $_.Exception 'Failed to get AsusSetup'
 }
 
-Write-Host 'patching AiSuite3...'
+Write-Host 'Patching AiSuite3...'
 try {
     Copy-Item '..\Patches\AiSuite3\DrvResource\*' (Resolve-Path '..\Apps\AiSuite3\DrvResource').Path -Recurse -Force -ErrorAction Stop
 } catch {
     Resolve-Error $_.Exception
 }
 
-Write-Host 'patching AuraSync...'
+Write-Host 'Patching AuraSync...'
 try {
-    $auraPath = (Resolve-Path '..\Apps\AuraSync\*').Path
+    $AuraPath = (Resolve-Path '..\Apps\AuraSync\*').Path
 
     #First copy newer MB & Display Hal Setups
-    Copy-Item "$auraPath\LightingService\aac\AacMBSetup.exe" "$env:TEMP\AacMBSetup.exe" -Force -ErrorAction Stop
-    Copy-Item "$auraPath\LightingService\aac\AacDisplaySetup.exe" "$env:TEMP\AacDisplaySetup.exe" -Force -ErrorAction Stop
-    Copy-Item $auraPatch $auraPath -Recurse -Force -ErrorAction Stop
-    $fullInstall = Read-Host 'add all AuraSync modules? [Y] Yes [N] No'
-    if ($fullInstall -eq 'N') {
-        Write-Host 'updating AuraSync modules...'
-        Update-AuraModules "$auraPath\LightingService" ([boolean] $LiveDashUrl) -ErrorAction Stop
+    Copy-Item "$AuraPath\LightingService\aac\AacMBSetup.exe" "$Env:TEMP\AacMBSetup.exe" -Force -ErrorAction Stop
+    Copy-Item "$AuraPath\LightingService\aac\AacDisplaySetup.exe" "$Env:TEMP\AacDisplaySetup.exe" -Force -ErrorAction Stop
+    Copy-Item $AuraPatch $AuraPath -Recurse -Force -ErrorAction Stop
+    $FullInstall = Read-Host 'Add all AuraSync modules? [Y] Yes [N] No'
+    if ($FullInstall -eq 'N') {
+        Write-Host 'Updating AuraSync modules...'
+        Update-AuraModules "$AuraPath\LightingService" ([boolean] $LiveDashUrl) -ErrorAction Stop
     }
 } catch {
     Resolve-Error $_.Exception
 }
 
 if ($LiveDashUrl) {
-    Write-Host 'patching LiveDash...'
+    Write-Host 'Patching LiveDash...'
     try {
-        $liveDashPath = (Resolve-Path '..\Apps\LiveDash\*').Path
-        Remove-Item "$liveDashPath\LightingService" -Recurse -Force -ErrorAction Stop
-        Copy-Item "$auraPath\LightingService" $liveDashPath -Recurse -Force -ErrorAction Stop
-        Copy-Item '..\Patches\LiveDash\*' $liveDashPath -Recurse -Force -ErrorAction Stop
+        $LiveDashPath = (Resolve-Path '..\Apps\LiveDash\*').Path
+        Remove-Item "$LiveDashPath\LightingService" -Recurse -Force -ErrorAction Stop
+        Copy-Item "$AuraPath\LightingService" $LiveDashPath -Recurse -Force -ErrorAction Stop
+        Copy-Item '..\Patches\LiveDash\*' $LiveDashPath -Recurse -Force -ErrorAction Stop
     } catch {
         Resolve-Error $_.Exception
     }
@@ -87,7 +87,7 @@ Clear-AsusBloat
 
 
 
-if ((Read-Host 'do you want install apps now? [Y] Yes [N] No') -eq 'Y') {
+if ((Read-Host 'Do you want install apps now? [Y] Yes [N] No') -eq 'Y') {
     Write-Host "`nSET ASUS SERVICE" -ForegroundColor green
     try {
         Set-AsusService (Resolve-Path '..\Apps\AiSuite3\Setup.exe').Path
@@ -98,9 +98,9 @@ if ((Read-Host 'do you want install apps now? [Y] Yes [N] No') -eq 'Y') {
 
 
     Write-Host "`nINSTALL ASUS SETUP" -ForegroundColor green
-    Write-Host 'installing Aura Sync...'
+    Write-Host 'Installing Aura Sync...'
     try {
-        Start-Process "$auraPath\Setup.exe" -ArgumentList '/s' -Wait
+        Start-Process "$AuraPath\Setup.exe" -ArgumentList '/s' -Wait
         Start-Sleep 2
         if (-not (Test-Path "${Env:ProgramFiles(x86)}\LightingService")) {
             throw 'Failed to install aura sync. Try again'
@@ -109,14 +109,14 @@ if ((Read-Host 'do you want install apps now? [Y] Yes [N] No') -eq 'Y') {
         Resolve-Error $_.Exception
     }
     if ($LiveDashUrl) {
-        Write-Host 'installing LiveDash...'
+        Write-Host 'Installing LiveDash...'
         try {
-            Start-Process "$liveDashPath\AsusSetup.exe" -ArgumentList '/s' -Wait -ErrorAction Stop
+            Start-Process "$LiveDashPath\AsusSetup.exe" -ArgumentList '/s' -Wait -ErrorAction Stop
         } catch {
             Resolve-Error $_.Exception
         }
 
-        Write-Host 'stopping LightingService...'
+        Write-Host 'Stopping LightingService...'
         try {
             Stop-Service -Name 'LightingService'
             Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
@@ -124,30 +124,30 @@ if ((Read-Host 'do you want install apps now? [Y] Yes [N] No') -eq 'Y') {
             Resolve-Error $_.Exception
         }
 
-        if (Get-ChildItem "$auraPath\LightingService\aac\*AacMBSetup.exe") {
-            Write-Host 'updating MB Hal...'
+        if (Get-ChildItem "$AuraPath\LightingService\aac\*AacMBSetup.exe") {
+            Write-Host 'Updating MB Hal...'
             try {
-                Start-Process "$env:TEMP\AacMBSetup.exe" -ArgumentList '/s' -Wait -ErrorAction Stop
+                Start-Process "$Env:TEMP\AacMBSetup.exe" -ArgumentList '/s' -Wait -ErrorAction Stop
             } catch {
                 Resolve-Error $_.Exception
             }
         }
 
-        if (Get-ChildItem "$auraPath\LightingService\aac\*AacDisplaySetup.exe") {
-            Write-Host 'updating Display Hal...'
+        if (Get-ChildItem "$AuraPath\LightingService\aac\*AacDisplaySetup.exe") {
+            Write-Host 'Updating Display Hal...'
             try {
-                Start-Process "$env:TEMP\AacDisplaySetup.exe" -ArgumentList '/s' -Wait -ErrorAction Stop
+                Start-Process "$Env:TEMP\AacDisplaySetup.exe" -ArgumentList '/s' -Wait -ErrorAction Stop
             } catch {
                 Resolve-Error $_.Exception
             }
         }
     }
 
-    if ((Read-Host 'do you want to install AiSuite 3? [Y] Yes [N] No') -eq 'Y') {
-        if ($hasAiSuite) {
-            Write-Warning 'reboot is required after AiSuite3 uninstallation. Install manually on folder "Apps\AiSuite3"'
+    if ((Read-Host 'Do you want to install AiSuite 3? [Y] Yes [N] No') -eq 'Y') {
+        if ($HasAiSuite) {
+            Write-Warning 'Reboot is required after AiSuite3 uninstallation. Install manually on folder "Apps\AiSuite3"'
         } else {
-            Write-Host 'installing AiSuite 3...'
+            Write-Host 'Installing AiSuite 3...'
             try {
                 Start-Process '..\Apps\AiSuite3\AsusSetup.exe' -ArgumentList '/s /norestart' -Wait
                 Start-Sleep 2
@@ -157,14 +157,14 @@ if ((Read-Host 'do you want install apps now? [Y] Yes [N] No') -eq 'Y') {
         }
     }
 
-    Write-Output 'removing temp files...'
-    Remove-FileFolder $env:TEMP -ErrorAction SilentlyContinue
+    Write-Output 'Removing temp files...'
+    Remove-FileFolder $Env:TEMP -ErrorAction SilentlyContinue
 }
 
 
 
-$emoji = Convert-UnicodeToEmoji '1F389'
-Write-Host "`n$emoji ASUS SETUP TOOL FINISHED WITH SUCCESS! $emoji" -ForegroundColor green
+$Emoji = Convert-UnicodeToEmoji '1F389'
+Write-Host "`n$Emoji ASUS SETUP TOOL FINISHED WITH SUCCESS! $Emoji" -ForegroundColor green
 if ((Read-Host 'Reboot system now (recommended)? [Y] Yes [N] No') -eq 'Y') {
     shutdown /r /t 5 /c "System will restart"
 }
