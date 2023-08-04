@@ -19,7 +19,7 @@ NOTE: Before you proceed, note that this tool is experimental, still in early st
 </span>
 
 - Create a System Restore point, [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
-- Download [ASUS Setup Tool here]()
+- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.1.0.zip)
 - Extract the zip contents to a folder
 - Right click on `setup.bat` and `run as administrator`.
 - For question prompts, `[Y] Yes [N] No` just type `Y` or `N` followed by `ENTER`
