@@ -1,7 +1,5 @@
 <# ================================ FUNCTIONS ================================ #>
 
-#$Global:LOG_FILE = "$((Get-Location).Path)\AsusSetupHelperTool.log"
-
 <#
     Handles Exception exit strategy
 #>

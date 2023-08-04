@@ -1,4 +1,4 @@
-#$global:DebugPreference = 'SilentlyContinue'
+#$global:DebugPreference = 'Continue'
 #Requires -RunAsAdministrator
 
 Import-Module .\functions.psm1
