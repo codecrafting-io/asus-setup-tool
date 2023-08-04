@@ -6,7 +6,7 @@ Import-Module .\functions.psm1
 <# ================================ MAIN SCRIPT ================================ #>
 if (-Not (Get-IsWindows11)) {
     Write-Warning 'Asus Setup Tool may not be compatible with Windows 11'
-    if ((Read-HostColor 'Do you still wish to proceed [Y] Yes [N] No' yellow) -eq 'N') {
+    if ((Read-HostColor 'Do you still wish to proceed [Y] Yes [N] No' Yellow) -eq 'N') {
         Exit
     }
 }
@@ -23,11 +23,12 @@ try {
 
 
 
-Write-Host "GET ASUS SETUP" -ForegroundColor green
+Write-Host "GET ASUS SETUP" -ForegroundColor Green
 $IsLiveDash = Read-Host 'Do you want LiveDash (controls OLED screen)? [Y] Yes [N] No'
 if ($IsLiveDash -eq 'Y') {
     Write-Warning 'LiveDash requirements may not be compatible with products **AFTER 2021**'
     $AuraPatch = '..\Patches\AuraSyncOld\*'
+    $LiveDashUrl = $SetupSettings.LiveDashUrl
 } else {
     $AuraPatch = '..\Patches\AuraSyncNew\*'
     $LiveDashUrl = ''
@@ -37,9 +38,10 @@ try {
     Get-ASUSSetup $LiveDashUrl -ErrorAction Stop
 } catch {
     try {
+        #If failed download is not trustable
         Remove-Item '..\Apps' -Force -Recurse -ErrorAction Stop
     } catch {
-        Resolve-Exception $_.Exception 'Failed to remove "Apps"'
+        Resolve-Error $_.Exception 'Failed to remove "Apps"'
     }
     Resolve-Error $_.Exception 'Failed to get AsusSetup'
 }
@@ -82,13 +84,13 @@ if ($LiveDashUrl) {
 
 
 
-Write-Host "`nCLEAR ASUS BLOATWARE" -ForegroundColor green
+Write-Host "`nCLEAR ASUS BLOATWARE" -ForegroundColor Green
 Clear-AsusBloat
 
 
 
 if ((Read-Host 'Do you want install apps now? [Y] Yes [N] No') -eq 'Y') {
-    Write-Host "`nSET ASUS SERVICE" -ForegroundColor green
+    Write-Host "`nSET ASUS SERVICE" -ForegroundColor Green
     try {
         Set-AsusService (Resolve-Path '..\Apps\AiSuite3\Setup.exe').Path
     } catch {
@@ -97,7 +99,7 @@ if ((Read-Host 'Do you want install apps now? [Y] Yes [N] No') -eq 'Y') {
 
 
 
-    Write-Host "`nINSTALL ASUS SETUP" -ForegroundColor green
+    Write-Host "`nINSTALL ASUS SETUP" -ForegroundColor Green
     Write-Host 'Installing Aura Sync...'
     try {
         Start-Process "$AuraPath\Setup.exe" -ArgumentList '/s' -Wait
@@ -164,7 +166,7 @@ if ((Read-Host 'Do you want install apps now? [Y] Yes [N] No') -eq 'Y') {
 
 
 $Emoji = Convert-UnicodeToEmoji '1F389'
-Write-Host "`n$Emoji ASUS SETUP TOOL FINISHED WITH SUCCESS! $Emoji" -ForegroundColor green
+Write-Host "`n$Emoji ASUS SETUP TOOL FINISHED WITH SUCCESS! $Emoji" -ForegroundColor Green
 if ((Read-Host 'Reboot system now (recommended)? [Y] Yes [N] No') -eq 'Y') {
     shutdown /r /t 5 /c "System will restart"
 }

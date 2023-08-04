@@ -59,6 +59,40 @@ function Convert-UnicodeToEmoji {
 
 <#
 .SYNOPSIS
+    Check file Setup Integrity. Throws error if failed
+
+.PARAMETER Unicode
+The unicode string. Cannot be null or empty
+
+.EXAMPLE
+    Compare-SetupIntegrity
+#>
+function Compare-SetupIntegrity {
+    [CmdletBinding()]
+    Param ()
+
+    try {
+        $IntegrityList = Get-Content -Raw '..\Source\lock.json' | ConvertFrom-Json -ErrorAction Stop
+    } catch {
+        Resolve-Error $_.Exception 'failed to check integrity'
+    }
+
+    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value '8BE28D5A73D754E8EE548EF44E458DF9B9838D3910655652FA811FAD071FEC25'
+    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\lock.json' -Value '1B7AD9EBBBD6C2BEC55AF5775F1A5F162931E3166109B1D430A0EC6CDF462520'
+    foreach ($File in $IntegrityList.PSObject.Properties) {
+        try {
+            if ((Get-FileHash $File.Name -Algorithm SHA256).Hash -ne $File.Value) {
+                throw "Invalid $((Get-Item $File.Name).Name). Setup may be corrupted"
+            }
+        }
+        catch {
+            Resolve-Error $_.Exception
+        }
+    }
+}
+
+<#
+.SYNOPSIS
     Importe configuration from settings.json file to global variables
 
 .EXAMPLE
@@ -79,6 +113,11 @@ function Convert-UnicodeToEmoji {
 #>
 function Import-Config {
 
+    Compare-SetupIntegrity
+
+    # Check Source integrity
+    Compare-SetupIntegrity
+
     try {
         $Settings = Get-Content -Raw '..\Source\settings.json' | ConvertFrom-Json -ErrorAction Stop
         Write-Information $Settings
@@ -86,15 +125,7 @@ function Import-Config {
         Resolve-Error $_.Exception 'failed to load configuration file'
     }
 
-    $Global:AsusSetupToolVersion = $Settings.version
-    $Global:AuraSyncUrl = $Settings.AuraSyncUrl
-    $Global:AiSuite3Url = $Settings.AiSuite3Url
-    $Global:LiveDashUrl = $Settings.LiveDashUrl
-    $Global:UninstallToolUrl = $Settings.UninstallToolUrl
-    $Global:AuraSyncGuid = $Settings.AuraSyncGuid
-    $Global:LiveDashGuid = $Settings.LiveDashGuid
-    $Global:GlckIODriverGuid = $Settings.GlckIODriverGuid
-    $Global:GlckIO2DriverGuid = $Settings.GlckIO2DriverGuid
+    $Global:SetupSettings = $Settings
     $Global:UserSID = Get-UserSID
 }
 
@@ -114,7 +145,7 @@ function Write-HeaderTitle {
  / ___ |___/ / /_/ /___/ /   ___/ /  __/ /_/ /_/ / /_/ /    / / / /_/ / /_/ / /
 /_/  |_/____/\____//____/   /____/\___/\__/\__,_/ .___/    /_/  \____/\____/_/
                                                /_/
-    version: $Emoji $AsusSetupToolversion $Emoji
+    version: $Emoji $($SetupSettings.Version) $Emoji
     author: CodeCrafting-io
     " -ForegroundColor Cyan
 }
@@ -398,6 +429,10 @@ function Get-ASUSSetup {
         } else {
             Write-Warning "LiveDash already downloaded. Extracting..."
         }
+        if ((Get-FileHash '..\Apps\LiveDash.zip' -Algorithm SHA256).Hash -ne $SetupSettings.LiveDashHash)  {
+            Remove-Item '..\Apps\LiveDash.zip' -Force -ErrorAction Stop
+            throw 'Invalid LiveDash.zip file.'
+        }
         Remove-Item '..\Apps\LiveDash\*' -Recurse -ErrorAction SilentlyContinue
         Expand-Archive '..\Apps\LiveDash.zip' -DestinationPath "..\Apps\LiveDash\" -Force -ErrorAction Stop
     }
@@ -405,9 +440,13 @@ function Get-ASUSSetup {
     #AISUITE
     if (-Not (Test-Path '..\Apps\AiSuite3.zip')) {
         Write-Host "Downloading AiSuite3 (installation optional)..."
-        Invoke-WebRequest $AiSuite3Url -OutFile '..\Apps\AiSuite3.zip'
+        Invoke-WebRequest $SetupSettings.AiSuite3Url -OutFile '..\Apps\AiSuite3.zip'
     } else {
         Write-Warning "AiSuite3 already downloaded (installation optional). Extracting..."
+    }
+    if ((Get-FileHash '..\Apps\AiSuite3.zip' -Algorithm SHA256).Hash -ne $SetupSettings.AiSuite3Hash)  {
+        Remove-Item '..\Apps\AiSuite3.zip' -Force -ErrorAction Stop
+        throw 'Invalid AiSuite3.zip file.'
     }
     Remove-Item '..\Apps\AiSuite3\*' -Recurse -ErrorAction SilentlyContinue
     Expand-Archive '..\Apps\AiSuite3.zip' -DestinationPath "..\Apps\AiSuite3\" -Force -ErrorAction Stop
@@ -415,26 +454,33 @@ function Get-ASUSSetup {
     #AuraSync
     if (-Not (Test-Path '..\Apps\AuraSync.zip')) {
         Write-Host 'Downloading AuraSync...'
-        Invoke-WebRequest $AuraSyncUrl -OutFile '..\Apps\AuraSync.zip'
+        Invoke-WebRequest $SetupSettings.AuraSyncUrl -OutFile '..\Apps\AuraSync.zip'
     } else {
         Write-Warning "AuraSync already downloaded. Extracting..."
+    }
+    if ((Get-FileHash '..\Apps\AuraSync.zip' -Algorithm SHA256).Hash -ne $SetupSettings.AuraSyncHash)  {
+        Remove-Item '..\Apps\AuraSync.zip' -Force -ErrorAction Stop
+        throw 'Invalid AuraSync.zip file.'
     }
     Remove-Item '..\Apps\AuraSync\*' -Recurse -ErrorAction SilentlyContinue
     Expand-Archive '..\Apps\AuraSync.zip' -DestinationPath "..\Apps\AuraSync\" -Force -ErrorAction Stop
 
     #Armoury Uninstall Tool
-    if (-Not (Test-Path '..\Apps\Uninstall.zip')) {
+    if (-Not (Test-Path '..\Apps\UninstallTool.zip')) {
         Write-Host 'Downloading Armoury Crate Uninstall Tool...'
-        Invoke-WebRequest $UninstallToolUrl -OutFile '..\Apps\Uninstall.zip'
+        Invoke-WebRequest $SetupSettings.UninstallToolUrl -OutFile '..\Apps\UninstallTool.zip'
     } else {
         Write-Warning "Armoury Crate Uninstall Tool already downloaded. Extracting..."
     }
-    try {
-        Remove-Item '..\Apps\Uninstall\*' -Recurse -ErrorAction SilentlyContinue
-        Expand-Archive '..\Apps\Uninstall.zip' -DestinationPath "..\Apps\Uninstall\" -Force -ErrorAction Stop
-    } catch {
-        Resolve-Error $_.Exception 'Failed to extract uninstall tool'
+    if ((Get-FileHash '..\Apps\UninstallTool.zip' -Algorithm SHA256).Hash -ne $SetupSettings.UninstallToolHash)  {
+
+        #Download link does not point to a specific version. TODO: Look for alternative checks
+        if ((Read-HostColor 'UninstallTool integrity check failed. Tool could be updated. Do you wish to proceed?' Yellow) -eq 'N') {
+            throw 'Invalid UninstallTool.zip file.'
+        }
     }
+    Remove-Item '..\Apps\UninstallTool\*' -Recurse -ErrorAction SilentlyContinue
+    Expand-Archive '..\Apps\UninstallTool.zip' -DestinationPath "..\Apps\UninstallTool\" -Force -ErrorAction Stop
 }
 
 <#
@@ -473,10 +519,10 @@ function Clear-AsusBloat {
     [CmdletBinding()]
     PARAM()
 
-    $AuraUninstaller = "${Env:ProgramFiles(x86)}\InstallShield Installation Information\$AuraSyncGuid"
-    $LiveDashUninstaller = "${Env:ProgramFiles(x86)}\InstallShield Installation Information\$LiveDashGuid"
+    $AuraUninstaller = "${Env:ProgramFiles(x86)}\InstallShield Installation Information\$($SetupSettings.AuraSyncGuid)"
+    $LiveDashUninstaller = "${Env:ProgramFiles(x86)}\InstallShield Installation Information\$($SetupSettings.LiveDashGuid)"
     $AiSuite3Path = "${Env:ProgramFiles(x86)}\Asus\AI Suite III\AISuite3.exe"
-    $GlckIODriver = "${Env:ProgramData}\Package Cache\$GlckIODriverGuid\GlckIODrvSetup.exe"
+    $GlckIODriver = "${Env:ProgramData}\Package Cache\$($SetupSettings.GlckIODriverGuid)\GlckIODrvSetup.exe"
 
     $Services = @(
         'asComSvc'
@@ -558,7 +604,7 @@ function Clear-AsusBloat {
 
     Write-Output 'Running Uninstall Tool (please wait, this can take a while)...'
     try {
-        $UninstallSetup = (Get-ChildItem '..\Apps\Uninstall\*Armoury Crate Uninstall Tool.exe' -Recurse).FullName
+        $UninstallSetup = (Get-ChildItem '..\Apps\UninstallTool\*Armoury Crate Uninstall Tool.exe' -Recurse).FullName
         Start-Process $UninstallSetup -ArgumentList '-silent' -Wait
 
         #Sometimes executing again lead to better results
@@ -618,8 +664,8 @@ function Clear-AsusBloat {
     foreach ($Registry in $Registries) {
         try {
             $Registry = $Registry.Replace('<usersid>', $UserSID)
-            $Registry = $Registry.Replace('<aurasyncguid>', $AuraSyncGuid)
-            $Registry = $Registry.Replace('<livedashguid>', $LiveDashGuid)
+            $Registry = $Registry.Replace('<aurasyncguid>', $SetupSettings.AuraSyncGuid)
+            $Registry = $Registry.Replace('<livedashguid>', $SetupSettings.LiveDashGuid)
 
             Write-Information "Removing '$Registry'"
             Remove-Item "Registry::$Registry" -Recurse -Force -ErrorAction Stop
