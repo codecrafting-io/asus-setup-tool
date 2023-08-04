@@ -119,7 +119,7 @@ In addition to this, the old `LightingService.exe` is also required to LiveDash 
 
 ## Final considerations
 
-I don't have a lot of experience with .NET or PowerShell projects and feel free to help to improve this project, and improve the setup process, specially in relation to LiveDash installation. Another thing is about "VirusTotal" detections, all patches assets used are from the latest ArmouryCrate, and the older `AacMBSetup.exe` and `AuraServiceSetup` are necessary for LiveDash installtion in the current state of the tool, **so use this tool at your own risk**.
+I don't have a lot of experience with .NET or PowerShell projects and feel free to help to improve this project, and improve the setup process, specially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/b5fd29a71763083ec665e453fecdc94aa0cb3847d0d7fa985c923318dd20a544/relations) detections, all patches assets used are from the latest ArmouryCrate, and the older `AacMBSetup.exe` and `AuraServiceSetup` are necessary for LiveDash installtion in the current state of the tool, **so use this tool at your own risk**.
 
 This tool was making in the feeling of **REALLY NOT LIKING ARMOURY CRATE**. I hope this helps, I finally bring some balance to the force 😁
 
