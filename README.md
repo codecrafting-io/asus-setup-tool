@@ -19,9 +19,9 @@ NOTE: Before you proceed, note that this tool is experimental, still in early st
 </span>
 
 - Create a System Restore point, [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
-- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.1.0.zip)
+- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.1.2.zip)
 - Extract the zip contents to a folder
-- If you have a third party antivirus, you **may have to add the setup to exclusions, disable or even uninstall**, specially if it is a Kaspersky product. After this reboot the system and then proceed.
+- If you have a third party antivirus, you **may have to add the setup to exclusions, disable or even uninstall**, specially if it is a Kaspersky product. After this reboot the system and then proceed. You can re-enable/re-install the antivirus later.
 - Right click on `setup.bat` and `run as administrator`.
 - For question prompts, `[Y] Yes [N] No` just type `Y` or `N` followed by `ENTER`
 - At this point, you should see a screen like that:
@@ -30,7 +30,7 @@ NOTE: Before you proceed, note that this tool is experimental, still in early st
 
   - In case you see a PowerShell script policy error. Open the PowerShell as an Administrator, navigate to the directory where you extract the tool typing the command `CD "directory"`, then type `Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force`. Now still inside the PowerShell terminal type `.\Setup.bat`
 - Choose if you want to install LiveDash. <span style="color: orange; font-weight: bold;">Note that the installation of LiveDash implies using older Aura Sync dependencies in order to work, which may be incompatible with products released after 2020|2021. This will also affect AuraSync installation.</span>
-- The tools LiveDash (if you chose), AuraSync, AiSuite 3, Armoury Uninstall Tool. The AiSuite3 is downloaded for correctly setting some services, but installation is optional.
+- The tools LiveDash (if you chose), AuraSync, AiSuite 3, Armoury Uninstall Tool will be downloaded. The AiSuite3 is downloaded for correctly setting some services, but installation is optional.
 - After the download and patches applied, you should see an option to choose which AuraSync modules you want to add. Mark the checkboxes for modules you want. AuraSync have a modular component design to control a variety of devices. By the default, the setup will install all modules even if you don't have the device. If you want a cleaner installation, you can check here which modules are relevant for your case. If you type `N` you should see the following screens:
 
     ![ASUS Setup Tool add modules](/Source/Images/screen2.png?raw=true)
