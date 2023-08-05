@@ -80,8 +80,8 @@ function Compare-SetupIntegrity {
         Resolve-Error $_.Exception 'failed to check integrity'
     }
 
-    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value '8BE28D5A73D754E8EE548EF44E458DF9B9838D3910655652FA811FAD071FEC25'
-    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\lock.json' -Value '1B7AD9EBBBD6C2BEC55AF5775F1A5F162931E3166109B1D430A0EC6CDF462520'
+    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value '36E2533A16B24E4871646E267246890EFD926BC484C591A6E5BBC9F4F829B569'
+    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\lock.json' -Value 'B80CBBB5903D756F7B6ABB72ECF6DA52F0FFC3BB6DF61DDE4AE547F4F3561FB8'
     foreach ($File in $IntegrityList.PSObject.Properties) {
         try {
             if ((Get-FileHash $File.Name -Algorithm SHA256).Hash -ne $File.Value) {
