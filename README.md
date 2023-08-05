@@ -21,6 +21,7 @@ NOTE: Before you proceed, note that this tool is experimental, still in early st
 - Create a System Restore point, [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
 - Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.1.0.zip)
 - Extract the zip contents to a folder
+- If you have a third party antivirus, you **may have to add the setup to exclusions, disable or even uninstall**, specially if it is a Kaspersky product. After this reboot the system and then proceed.
 - Right click on `setup.bat` and `run as administrator`.
 - For question prompts, `[Y] Yes [N] No` just type `Y` or `N` followed by `ENTER`
 - At this point, you should see a screen like that:
@@ -66,6 +67,7 @@ Besides that, some issues are known:
     ![ASUS Setup Tool LightingService uninstall](/Source/Images/screen6.png?raw=true)
 
 - ASUS Setup Tool in the momment is not fully compatible with the latest Aura Sync 1.07.84_v2
+- If `SET ASU SERVER` fails, reboot the system and try again. You may have to disable or uninstall the antivirus.
 
 ## Settings
 
@@ -120,6 +122,8 @@ In addition to this, the old `LightingService.exe` is also required to LiveDash 
 ## Final considerations
 
 I don't have a lot of experience with .NET or PowerShell projects and feel free to help to improve this project, and improve the setup process, specially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/b5fd29a71763083ec665e453fecdc94aa0cb3847d0d7fa985c923318dd20a544/relations) detections, all patches assets used are from the latest ArmouryCrate, and the older `AacMBSetup.exe` and `AuraServiceSetup` are necessary for LiveDash installtion in the current state of the tool, **so use this tool at your own risk**.
+
+It's not necessary to leave `LightingService`, `ASUS COM Service` running all the time to keep your RGB settings. Once you set, you can [open the services](https://www.wikihow.com/Open-Windows-Services) to open the properties of each service and set the initialization type for manual. You only need to reopen the AuraSync if a power loss happens.
 
 This tool was making in the feeling of **REALLY NOT LIKING ARMOURY CRATE**. I hope this helps, I finally bring some balance to the force 😁
 
