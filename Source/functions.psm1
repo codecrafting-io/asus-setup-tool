@@ -80,7 +80,7 @@ function Compare-SetupIntegrity {
         Resolve-Error $_.Exception 'failed to check integrity'
     }
 
-    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value '36E2533A16B24E4871646E267246890EFD926BC484C591A6E5BBC9F4F829B569'
+    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value '3846588BA298B33ABC2A6D2DDFDECD3AF92C29DF0FF9DAAB5259CFD022F343ED'
     $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\lock.json' -Value 'B80CBBB5903D756F7B6ABB72ECF6DA52F0FFC3BB6DF61DDE4AE547F4F3561FB8'
     foreach ($File in $IntegrityList.PSObject.Properties) {
         try {
@@ -115,9 +115,6 @@ function Compare-SetupIntegrity {
     UserSID
 #>
 function Import-Config {
-
-    Compare-SetupIntegrity
-
     # Check Source integrity
     Compare-SetupIntegrity
 
@@ -148,8 +145,8 @@ function Write-HeaderTitle {
  / ___ |___/ / /_/ /___/ /   ___/ /  __/ /_/ /_/ / /_/ /    / / / /_/ / /_/ / /
 /_/  |_/____/\____//____/   /____/\___/\__/\__,_/ .___/    /_/  \____/\____/_/
                                                /_/
-    version: $Emoji $($SetupSettings.Version) $Emoji
     author: CodeCrafting-io
+    version: $Emoji $($SetupSettings.Version) $Emoji
     " -ForegroundColor Cyan
 }
 
@@ -420,7 +417,7 @@ function Get-ASUSSetup {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [String] $LiveDashUrl
+        [String][AllowEmptyString()] $LiveDashUrl
     )
 
     #This is first just to avoid possible user confusion
