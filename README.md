@@ -121,7 +121,7 @@ In addition to this, the old `LightingService.exe` is also required to LiveDash 
 
 ## Final considerations
 
-I don't have a lot of experience with .NET or PowerShell projects and feel free to help to improve this project, and improve the setup process, specially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/400517af28de5c179044fea793969b11b1f21e44541ecfff755fa46ffd40faaf/relations) detections, all patches assets used are from the latest ArmouryCrate, and the older `AacMBSetup.exe` and `AuraServiceSetup` are necessary for LiveDash installtion in the current state of the tool, **so use this tool at your own risk**.
+I don't have a lot of experience with .NET or PowerShell projects and feel free to help to improve this project, and improve the setup process, specially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/78bde958298ff88d674a11d3ab17aac0dcad324e86e86b39f45297a996b8ab80/relations) detections, all patches assets used are from the latest ArmouryCrate, and the older `AacMBSetup.exe` and `AuraServiceSetup` are necessary for LiveDash installtion in the current state of the tool, **so use this tool at your own risk**.
 
 It's not necessary to leave `LightingService`, `ASUS COM Service` running all the time to keep your RGB settings. Once you set, you can [open the services](https://www.wikihow.com/Open-Windows-Services) to open the properties of each service and set the initialization type for manual. You only need to reopen the AuraSync if a power loss happens.
 
