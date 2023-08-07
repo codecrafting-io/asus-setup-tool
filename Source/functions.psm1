@@ -80,8 +80,8 @@ function Compare-SetupIntegrity {
         Resolve-Error $_.Exception 'failed to check integrity'
     }
 
-    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value '3846588BA298B33ABC2A6D2DDFDECD3AF92C29DF0FF9DAAB5259CFD022F343ED'
-    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\lock.json' -Value 'B80CBBB5903D756F7B6ABB72ECF6DA52F0FFC3BB6DF61DDE4AE547F4F3561FB8'
+    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value 'F71A8B3B46808C79555EA7A1010CE8F4CC38DC082F58E6DC9FB6A50762B0A01D'
+    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\lock.json' -Value '3E1F107A7A8416E16978C6D04613A5840B883BDC4FE4324C97EF2DDB8ACADF75'
     foreach ($File in $IntegrityList.PSObject.Properties) {
         try {
             if ((Get-FileHash $File.Name -Algorithm SHA256).Hash -ne $File.Value) {
@@ -137,7 +137,9 @@ function Import-Config {
     Write-HeaderTitle
 #>
 function Write-HeaderTitle {
-    $Emoji = Convert-UnicodeToEmoji '1F680'
+    $VersionEmoji = Convert-UnicodeToEmoji '1F680'
+    $AuthorEmoji = Convert-UnicodeToEmoji '1F4D1'
+
     Write-Host "
     ___   _____ __  _______    _____      __                 ______            __
    /   | / ___// / / / ___/   / ___/___  / /___  ______     /_  __/___  ____  / /
@@ -145,8 +147,8 @@ function Write-HeaderTitle {
  / ___ |___/ / /_/ /___/ /   ___/ /  __/ /_/ /_/ / /_/ /    / / / /_/ / /_/ / /
 /_/  |_/____/\____//____/   /____/\___/\__/\__,_/ .___/    /_/  \____/\____/_/
                                                /_/
-    author: CodeCrafting-io
-    version: $Emoji $($SetupSettings.Version) $Emoji
+    $AuthorEmoji author: CodeCrafting-io
+    $VersionEmoji version: v$($SetupSettings.Version)
     " -ForegroundColor Cyan
 }
 
@@ -420,9 +422,17 @@ function Get-ASUSSetup {
         [String][AllowEmptyString()] $LiveDashUrl
     )
 
+    $Global:SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncUrl' -Value $SetupSettings.AuraSyncUrlNew
+    $Global:SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncHash' -Value $SetupSettings.AuraSyncHashNew
+    $Global:SetupSettings | Add-Member -Type NoteProperty -Name 'HasLiveDash' -Value $False
+
     #This is first just to avoid possible user confusion
     #LIVEDASH
     if ($LiveDashUrl) {
+        $Global:SetupSettings.AuraSyncUrl = $SetupSettings.AuraSyncUrlOld
+        $Global:SetupSettings.AuraSyncHash = $SetupSettings.AuraSyncHashOld
+        $Global:SetupSettings.HasLiveDash = $True
+
         if (-Not (Test-Path '..\Apps\LiveDash.zip')) {
             Write-Host 'Downloading LiveDash...'
             Invoke-WebRequest $LiveDashUrl -OutFile '..\Apps\LiveDash.zip'
@@ -547,7 +557,11 @@ function Clear-AsusBloat {
         , "${Env:ProgramFiles(x86)}\ASUS"
         , "${Env:ProgramFiles}\ASUS"
         , "${Env:ProgramData}\ASUS"
-        , "${Env:ProgramFiles(x86)}\InstallShield Installation Information"
+        , "$AuraUninstaller"
+        , "$LiveDashUninstaller"
+        , "${Env:ProgramFiles(x86)}\InstallShield Installation Information\{AF8D8D0D-1262-4368-895E-44DA5632CD7B}" #AiSuite3
+        , "${Env:ProgramFiles(x86)}\InstallShield Installation Information\{7B40EADF-CA1B-423A-A110-89DA90679788}" #AiSuite3
+        , "${Env:ProgramFiles(x86)}\InstallShield Installation Information\{C0FEE440-FA2F-4C0D-B64C-35F1D4B7A009}" #AiSuite3
         , "$Env:SystemRoot\System32\AsIO2.dll"
         , "$Env:SystemRoot\System32\AsIO3.dll"
         , "$Env:SystemRoot\System32\AsusDownLoadLicense.exe"
@@ -588,6 +602,15 @@ function Clear-AsusBloat {
             Copy-Item '.\Setups\Setup.exe' "$AuraUninstaller\Setup.exe" -Force -ErrorAction Stop
             Copy-Item '..\Source\uninstall-aurasync.iss' "$AuraUninstaller\uninstall.iss" -Force -ErrorAction Stop
             Start-Process "$AuraUninstaller\Setup.exe" -ArgumentList "-l0x9 -x -s -ARP -f1`"$AuraUninstaller\uninstall.iss`"" -Wait
+            Start-Sleep 1
+
+            #Aura Sync uninstaller does not fully to remove lightning service sometimes
+            $AuraServiceSetup = (Resolve-Path '..\Apps\AuraSync\*\LightingService').Path
+            if (-Not $SetupSettings.HasLiveDash) {
+                Start-Process "$AuraServiceSetup\LSInstall\AuraServiceSetup.exe" -ArgumentList '-x -s' -Wait
+            } else {
+                Start-Process "$AuraServiceSetup\AuraServiceSetup.exe" -ArgumentList '-x -s' -Wait
+            }
             Start-Sleep 1
         }
         if (Test-Path $GlckIODriver) {
@@ -684,14 +707,8 @@ function Clear-AsusBloat {
 .PARAMETER ModulesPath
     The path where the AuraSync modules are. (Mandatory)
 
-.PARAMETER HasLiveDash
-    To whether or not update modules based on older AuraSync (Optional, Defaults to $False)
-
 .EXAMPLE
     Update-AuraModules -ModulesPath 'ModulesPath'
-
-.EXAMPLE
-    Update-AuraModules -ModulesPath 'ModulesPath' -HasLiveDash $True
 
 .NOTES
     If HasLiveDash is $True and none of AacMBSetup.exe, AacDisplaySetup.exe AacAIOFanSetup.exe modules were selected AacMBSetup is added
@@ -701,10 +718,7 @@ function Update-AuraModules {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $ModulesPath,
-
-        [Parameter()]
-        [Boolean] $HasLiveDash = $False
+        [String][ValidateNotNullOrEmpty()] $ModulesPath
     )
 
     $Modules = Get-Content '..\Source\HalVersion.txt'
@@ -712,7 +726,7 @@ function Update-AuraModules {
 
     # Mandatory modules
     $Selected.Add('AuraServiceSetup.exe')
-    if ($HasLiveDash -and -not ($Selected.Contains('AacMBSetup.exe') -or $Selected.Contains('AacDisplaySetup.exe') -or $Selected.Contains('AacAIOFanSetup.exe'))) {
+    if ($SetupSettings.HasLiveDash -and -not ($Selected.Contains('AacMBSetup.exe') -or $Selected.Contains('AacDisplaySetup.exe') -or $Selected.Contains('AacAIOFanSetup.exe'))) {
         $Selected.Add('AacMBSetup.exe')
     }
     $NewModules = @()
@@ -726,7 +740,7 @@ function Update-AuraModules {
             } else {
                 try {
                     #Newer Aura versions have changed setup folder structure, this search for files
-                    Get-ChildItem "$ModulesPath\aac\*$ModuleSetup" -Recurse | Remove-Item -Force -ErrorAction Stop
+                    Get-ChildItem "$ModulesPath\*$ModuleSetup" -Recurse | Remove-Item -Force -ErrorAction Stop
                     Write-Information ($ModuleSetup + ' to remove')
                 } catch {
                     Write-Debug $_.Exception
@@ -767,11 +781,11 @@ function Show-AuraDropdown {
     $GroupBox.Font = $LabelFont
     $Form.Controls.Add($GroupBox)
 
-    $options = [ordered]@{
+    $Options = [ordered]@{
         'AacAIOFanSetup.exe'='Asus AIO'
         ; 'AacCorsairSetup.exe'='Corsair'
         ; 'AacDisplaySetup.exe'='Display'
-        ; 'AacENEDramSetup.exe-AacHal_ENE_DRAM_RGB_6K7742.exe-AacSetup.exe-AacSetup_DramHAL.exe'='RAM'
+        ; 'AacENEDramSetup.exe-AacHal_ENE_DRAM_RGB_6K7742.exe-AacSetup.exe-AacSetup_DramHAL.exe-AacUHDRAMSetup.exe'='RAM'
         ; 'AacExtCardSetup.exe'='Extension Card'
         ; 'AacGalaxSetup.exe'='Galax'
         ; 'AacHeadSetSetup.exe'='Headset'
@@ -780,22 +794,30 @@ function Show-AuraDropdown {
         ; 'AacMBSetup.exe'='Motherboard'
         ; 'AacMousePadSetup.exe'='Mousepad'
         ; 'AacMouseSetup.exe'='Mouse'
-        ; 'AacNBDTSetup.exe-UpdateNBDTHal.exe'='Laptop Keyboard (NBDT)'
+        ; 'AacNBDTSetup.exe-UpdateNBDTHal.exe'='Laptop (NBDT)'
         ; 'AacOddSetup.exe'='ODD Controller'
         ; 'AacPatriotM2Setup.exe-AacPatriotSetup.exe-AacPatriotDRAMSetup.exe'='Patriot'
         ; 'AacPhisonSetup.exe'='Phison'
-        ; 'AacSetup_ENE_EHD_M2_HAL-AacSetup_ENE_EHD_M2_HAL.exe'='SSD/HD'
+        ; 'aacsetup_jmi_1.0.5.1.exe'='JMI'
+        ; 'AacSetup_WD_Black_AN1500_v1.0.12.0.exe-AacSetup_WD_BLACK_D50_1.0.9.0.exe'='Western Digital'
+        ; 'AacSetup_ENE_EHD_M2_HAL-AacSetup_ENE_EHD_M2_HAL.exe-AacSetup_ENE_ESD_ASM.exe'='SSD/HD'
         ; 'AacTerminalHal.exe'='Aura Terminal'
         ; 'AacVGASetup.exe'='VGA'
+    }
+
+    #Does exist for the new Aura Sync
+    if (-Not $SetupSettings.HasLiveDash) {
+        $Options.Remove('AacCorsairSetup.exe')
+        $Options.Remove('AacGalaxSetup.exe')
     }
 
     $Checkboxes = @()
     $Y = 20
 
-    foreach ($Key in $options.Keys) {
+    foreach ($Key in $Options.Keys) {
         $Checkbox = New-Object System.Windows.Forms.CheckBox
         $Checkbox.Name = $Key
-        $Checkbox.Text = $options[$Key]
+        $Checkbox.Text = $Options[$Key]
         $Checkbox.Location = New-Object System.Drawing.Size(10, $Y)
         $Checkbox.Size = New-Object System.Drawing.Size(($Form.Size.Width - 70), 20)
         $Checkbox.Font = $LabelFont
@@ -870,5 +892,46 @@ function Set-AsusService {
     $Setup.Kill()
     if ($Setup.MainWindowTitle -ne 'AI Suite 3 Setup') {
         Throw 'Failed to set Asus service'
+    }
+}
+
+<#
+.SYNOPSIS
+    Update ASUS Service post setup
+
+.EXAMPLE
+    Update-AsusService
+
+.NOTES
+    If a local LastProfile exists will update the profile and set the services to manual startup and disable all ASUS Tasks
+#>
+function Update-AsusService {
+    Write-Host 'Setting profiles for LightingService (wait)...'
+
+    #Asus LightingService is too sensitive and some times don't load profiles properly
+    try {
+        Start-Service -Name 'LightingService' -ErrorAction Stop
+        Start-Sleep 15
+        Stop-Service -Name 'LightingService' -ErrorAction Stop
+    } catch {
+        Resolve-Error $_.Exception
+    }
+
+    Copy-Item '..\Patches\Profiles\LastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
+    Copy-Item '..\Patches\Profiles\OledLastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\OledLastProfile.xml" -Force -ErrorAction SilentlyContinue
+    Start-Service -Name 'LightingService' -ErrorAction SilentlyContinue
+
+    #Wait a bit for the LightingService set the profile
+    Start-Sleep 15
+
+    #For those who already have a profile
+    if ((Read-Host 'Set services to manual startup and disable tasks? [Y] Yes [N] No') -eq 'Y') {
+        Write-Host 'Setting services to manual startup...'
+        Set-Service -Name 'LightingService' -StartupType Manual -ErrorAction SilentlyContinue
+        Set-Service -Name 'asHmComSvc' -StartupType Manual -ErrorAction SilentlyContinue
+        Set-Service -Name 'asComSvc' -StartupType Manual -ErrorAction SilentlyContinue
+
+        Write-Host 'Disabling ASUS tasks...'
+        Get-ScheduledTask -TaskPath "\Asus\*" | Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
     }
 }

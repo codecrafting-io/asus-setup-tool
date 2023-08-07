@@ -12,7 +12,7 @@ Dlg2={5899CD4F-8764-4303-A0D9-C60A62CFC24F}-RebootDialog-0
 Result=1
 [Application]
 Name=AURA
-Version=1.07.79
+Version=1.07.84
 Company=ASUS
 Lang=0009
 [{5899CD4F-8764-4303-A0D9-C60A62CFC24F}-SdFinish-0]
