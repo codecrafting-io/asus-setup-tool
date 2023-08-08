@@ -10,31 +10,29 @@ This is an PowerShell script tool that manages the setup installation for the le
 - Choose which modules from Aura Sync you want.
 - Install Aura Sync, LiveDash (optional), AiSuite 3 (optional).
 
-**NOTE: This tool was only tested for Windows 11 and may not work on Windows 10**
+**NOTE: This tool was only tested for Windows 11 and may not work on Windows 10.**
 
 ## Instructions
 
-<span style="color: orange; font-weight: bold;">
-NOTE: Before you proceed, note that this tool is experimental, still in early stages, provided as is and may not work or require manual tweaking.
-</span>
+**NOTE: Before you proceed, note that this tool is experimental, still in early stages, provided as is and may not work or require manual tweaking.**
 
-- Create a System Restore point, [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
-- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.1.2.zip)
-- Extract the zip contents to a folder
-- If you have a third party antivirus, you **may have to add the setup to exclusions, disable or even uninstall**, specially if it is a Kaspersky product. After this reboot the system and then proceed. You can re-enable/re-install the antivirus later.
+- Create a System Restore point (recommended), [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
+- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.2.0.zip).
+- Extract the zip contents to a folder.
+- If you have a third party antivirus, you **may have to add the setup to exclusions, disable or even uninstall it**, specially if it is a Kaspersky product. After this reboot the system and then proceed. You can re-enable/re-install the antivirus later.
 - Right click on `setup.bat` and `run as administrator`.
 - For question prompts, `[Y] Yes [N] No` just type `Y` or `N` followed by `ENTER`
 - At this point, you should see a screen like that:
 
     ![ASUS Setup Tool first screen](/Source/Images/screen1.png?raw=true)
 
-  - In case you see a "PowerShell file script policy execution is disabled", type `[ENTER]` to open an new POWERSHELL window will be opened with the execution policy set to `RemoteSigned` for the process scope, still allowing to execute the setup, like in the screen below:
+  - In case you see an "PowerShell file script policy execution is disabled", type `[ENTER]` to open an new POWERSHELL window with the execution policy set to `RemoteSigned` for the process scope, still allowing to execute the setup, like in the screen below:
 
     ![ASUS Setup Tool first screen](/Source/Images/screen7.png?raw=true)
 
-- Choose if you want to install LiveDash. <span style="color: orange; font-weight: bold;">Note that the installation of LiveDash implies using older Aura Sync dependencies in order to work, which may be incompatible with products released after 2020|2021. This will also affect AuraSync installation.</span>
+- Choose if you want to install LiveDash. **Note that the installation of LiveDash implies using older Aura Sync dependencies, which may be incompatible with products released after 2020. This will also affect AuraSync installation.**
 - The tools LiveDash (if you chose), AuraSync, AiSuite 3, Armoury Uninstall Tool will be downloaded. The AiSuite3 is downloaded for correctly setting some services, but installation is optional.
-- After the download and patches applied, you should see an option to choose which AuraSync modules you want to add. Mark the checkboxes for modules you want. AuraSync have a modular component design to control a variety of devices. By the default, the setup will install all modules even if you don't have the device. If you want a cleaner installation, you can check here which modules are relevant for your case. If you type `N` you should see the following screens:
+- After the download and patches applied, you should see an option to choose which AuraSync modules you want to add. Mark the checkboxes for the modules you want. AuraSync have a modular component design to control a variety of devices. By the default, the setup will install all modules even if you don't have the device. If you want a cleaner installation, you can check here which modules are relevant for your case. If you type `N` you should see the following screens:
 
     ![ASUS Setup Tool add modules](/Source/Images/screen2.png?raw=true)
 

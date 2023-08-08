@@ -799,10 +799,14 @@ function Show-AuraDropdown {
         ; 'AacVGASetup.exe'='VGA'
     }
 
-    #Does exist for the new Aura Sync
     if (-Not $SetupSettings.HasLiveDash) {
+        #Does exist for the new Aura Sync
         $Options.Remove('AacCorsairSetup.exe')
         $Options.Remove('AacGalaxSetup.exe')
+    } else {
+        #Does exist for the old Aura Sync
+        $Options.Remove('aacsetup_jmi_1.0.5.1.exe')
+        $Options.Remove('AacSetup_WD_Black_AN1500_v1.0.12.0.exe-AacSetup_WD_BLACK_D50_1.0.9.0.exe')
     }
 
     $Checkboxes = @()
