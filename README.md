@@ -2,6 +2,11 @@
 
 ![ASUS Setup Tool](/Source/Images/title.png?raw=true)
 
+[![GitHub Release](https://img.shields.io/github/v/tag/codecrafting-io/asus-setup-tool?label=version)]()
+[![Github All Releases](https://img.shields.io/github/downloads/codecrafting-io/asus-setup-tool/total)]()
+[![Issues](https://img.shields.io/github/issues/codecrafting-io/asus-setup-tool)](https://github.com/codecrafting-io/asus-setup-tool/issues)
+
+
 This is an PowerShell script tool that manages the setup installation for the legacy [Aura Sync](https://www.ASUS.com/campaign/aura), LiveDash, [AiSuite3](https://www.youtube.com/watch?v=MVS2Bx8Uofg), to FINNALY resolve installation errors on Windows 11. With this tool, you will:
 
 - Download Aura Sync, LiveDash, AiSuite3 directly from ASUS site.

@@ -7,6 +7,7 @@
 - Fixed emoji corruption
 - Improved AuraSync uninstallation
 - Added handling of POWERSHELL file script execution policy
+- Added repo badges
 
 ## v0.1.3
 
