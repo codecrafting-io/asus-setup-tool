@@ -71,8 +71,7 @@ function Compare-SetupIntegrity {
     [CmdletBinding()]
     Param ()
 
-    Write-Host 'checking integrity...'
-    Clear-Host
+    Write-Host 'checking file integrity...'
 
     try {
         $IntegrityList = Get-Content -Raw '..\Source\lock.json' | ConvertFrom-Json -ErrorAction Stop
@@ -92,6 +91,8 @@ function Compare-SetupIntegrity {
             Resolve-Error $_.Exception
         }
     }
+
+    Clear-Host
 }
 
 <#

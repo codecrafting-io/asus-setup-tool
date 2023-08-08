@@ -36,7 +36,7 @@ This is an PowerShell script tool that manages the setup installation for the le
 
     ![ASUS Setup Tool add modules](/Source/Images/screen2.png?raw=true)
 
-  - Some modules for brand specific is usually to control RGB Ram with AuraSync. If you don't want to use AuraSync to control them, don't check
+  - Some modules for brand specific is usually to control RGB Ram with AuraSync. If you don't want to use AuraSync to control them, don't check.
 - The uninstallation of all ASUS products will begin. This **will remove any related ASUS Software!**. During the uninstallation, the Armoury Crate Uninstall window will show up. This **process can take several minutes, please wait**.
 - After uninstallation, you should choose if you want to install the apps now. Use this if you only wanted to uninstall ASUS software.
 
@@ -54,29 +54,38 @@ This is an PowerShell script tool that manages the setup installation for the le
 
     ![ASUS Setup Tool Finished with success](https://www.memesmonkey.com/images/memesmonkey/ba/ba0418a6baea139993fc38eb95f5da04.jpeg)
 
+
+# Automatic set of profiles
+
+If you create a folder "Profiles" inside "Patches" and put the files `LastProfile.xml` and `OledLastProfile.xml` from previous `LightingService` installations, the ASUS Setup Tool will set those profiles after the installation. Also, a new option will appear to set "Set services to manual startup and disable tasks". This will disable ASUS Tasks (mostly for ASUS Update), update the services `ASUS Com Service`, `ASUS HM Com Service` (LiveDash only), `AsusCertService` and `LightingService` to manual startup, and also update their dependencies to they start properly when launching the applications. Note, the apps may take a while to start using this.
+
 ## Known Issues
 
-If you have errors using the tool, open a PowerShell as a Administrator, navigate to the directory where you extract the tool, type the command `$global:DebugPreference = 'Continue'` and then `.\Setup.bat` to run ASUS Setup Tool. Copy the text for a `.txt` file and open a issue.
+Some of known issues:
 
-Besides that, some issues are known:
-
-- AuraSync is not opening. This is due to `LightingService` not running or even not installed.
+- AuraSync takes too long to open: This can happen due to the module's initialization of `LightingService`. You can opt to no install some modules during setup.
+- AuraSync is not opening: This is due to `LightingService` not running or even not installed.
   - Reboot the system.
   - Go to the `Apps\AuraSync` folder of the ASUS Setup Tool and locate the `AuraServiceSetup.exe` file inside `LightingService` folder.
   - Run the setup to check if shows a button with `uninstall`. If so, uninstall and rerun the ASUS Setup Tool again.
 
     ![ASUS Setup Tool LightingService uninstall](/Source/Images/screen6.png?raw=true)
 
-- ASUS Setup Tool in the momment is not fully compatible with the latest Aura Sync 1.07.84_v2
-- If `SET ASU SERVER` fails, reboot the system and try again. You may have to disable or uninstall the antivirus.
+- Aura Sync failed to install: This usually happens due to failure of installation of `LightingService`. Reboot the system and run ASUS Setup Tool again.
+- Waiting to service stop: Sometimes some services or running drivers don't have an easy stop during the uninstallation. Reboot the system and try again.
+- The `GET ASUS SETUP` fails: This usually happens due to changing a setup from with to without LiveDash or vice versa. Just try again.
+- The `SET ASUS SERVER` fails: Reboot the system and try again. You may have to disable or uninstall the antivirus.
+- The [Windows core insolation](https://www.makeuseof.com/core-isolation-memory-integrity-windows/#:~:text=On%20the%20left%20side%20menu%20of%20the%20Windows%20Security%20app,the%20changes%20to%20take%20effect.) can interphere with the operation of ASUS Kernerl drivers.
+
+If you still have errors using the tool, open a PowerShell as a Administrator, navigate to the directory where you extract the tool, type the command `$global:DebugPreference = 'Continue'` and then `.\Setup.bat` to run ASUS Setup Tool. Copy the text for a `.txt` file and open a issue.
 
 ## Settings
 
-Inside `Source` folder have a `settings.json` configuration file which determines URLs for downloading the applications.
+Inside `Source` folder have a `settings.json` configuration file which determines URLs for downloading the applications. Note if you change it you must update hash file integrity validation.
 
 ## How it works
 
-This was years in the making, trying to understand what's going on every spare time that I had. ASUS software still to this day is messy, bloated and insecure, which for many this tool may not even be ideal to be frank, you may want to ditch ASUS products or even go for alternative software like [OpenRGB](https://openrgb.org/), [FanContol](https://getfancontrol.com/), [SignalRGB](https://signalrgb.com/).
+This was years in the making, trying to understand what's going on every spare time that I had. ASUS software still to this day is messy, bloated and potentially insecure. For many people this tool may not even be ideal to be frank, you may want to ditch ASUS products or even go for alternative software like [OpenRGB](https://openrgb.org/), [FanContol](https://getfancontrol.com/), [SignalRGB](https://signalrgb.com/).
 
 One of the main issues of ASUS software, it's the **dependency nightmare**. Multiple setups depend on the same library, services and assets, but that aren't consistent between installations. ASUS has a very modular setup, which can be seen as a good thing, but not in the way it was implemented, with almost no cohesion, and end up with a lot of services and maybe unnecessary Kernel level access drivers. ASUS software have key software components:
 
@@ -122,7 +131,7 @@ In addition to this, the old `LightingService.exe` is also required to LiveDash 
 
 ## Final considerations
 
-I don't have a lot of experience with .NET or PowerShell projects and feel free to help to improve this project, and improve the setup process, specially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/78bde958298ff88d674a11d3ab17aac0dcad324e86e86b39f45297a996b8ab80/relations) detections, all patches assets used are from the latest ArmouryCrate, and the older `AacMBSetup.exe` and `AuraServiceSetup` are necessary for LiveDash installtion in the current state of the tool, **so use this tool at your own risk**.
+I don't have a lot of experience with .NET or PowerShell projects, so feel free to help to improve this project and the setup process, specially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/78bde958298ff88d674a11d3ab17aac0dcad324e86e86b39f45297a996b8ab80/relations) detections, all patches assets used are from the latest ArmouryCrate, and the older `AacMBSetup.exe` and `AuraServiceSetup` are necessary for LiveDash installtion in the current state of the tool, **so use this tool at your own risk**.
 
 It's not necessary to leave `LightingService`, `ASUS COM Service` running all the time to keep your RGB settings. Once you set, you can [open the services](https://www.wikihow.com/Open-Windows-Services) to open the properties of each service and set the initialization type for manual. You only need to reopen the AuraSync if a power loss happens.
 
