@@ -110,10 +110,10 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
     Write-Host 'Installing Aura Sync...'
     try {
         Start-Process "$AuraPath\Setup.exe" -ArgumentList '/s /norestart' -Wait
-        Start-Sleep 2
         if (-not (Test-Path "${Env:ProgramFiles(x86)}\LightingService")) {
             throw 'Failed to install aura sync. Try again'
         }
+        Start-Sleep 2
     } catch {
         Resolve-Error $_.Exception
     }
@@ -121,7 +121,6 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
         Write-Host 'Installing LiveDash...'
         try {
             Start-Process "$LiveDashPath\Setup.exe" -ArgumentList '/s /norestart' -Wait -ErrorAction Stop
-            Start-Sleep 2
         } catch {
             Resolve-Error $_.Exception
         }

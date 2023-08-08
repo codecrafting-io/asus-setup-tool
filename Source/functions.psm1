@@ -103,15 +103,7 @@ function Compare-SetupIntegrity {
 
 .NOTES
     The global variables created are:
-    AsusSetupToolVersion
-    AuraSyncUrl
-    AiSuite3Url
-    LiveDashUrl
-    UninstallToolUrl
-    AuraSyncGuid
-    LiveDashGuid
-    GlckIODriverGuid
-    GlckIO2DriverGuid
+    SetupSettings (JSON)
     UserSID
 #>
 function Import-Config {
@@ -140,7 +132,9 @@ function Write-HeaderTitle {
     $VersionEmoji = Convert-UnicodeToEmoji '1F680'
     $AuthorEmoji = Convert-UnicodeToEmoji '1F4D1'
 
+    #A empty space to avoid emoji corruption by POWERSHELL progress bar
     Write-Host "
+
     ___   _____ __  _______    _____      __                 ______            __
    /   | / ___// / / / ___/   / ___/___  / /___  ______     /_  __/___  ____  / /
   / /| | \__ \/ / / /\__ \    \__ \/ _ \/ __/ / / / __ \     / / / __ \/ __ \/ /
@@ -578,7 +572,7 @@ function Clear-AsusBloat {
     )
     $Registries = Get-Content '..\Source\registries.txt' | Where-Object { $_.Trim() -ne '' }
 
-    Write-Output 'Uninstall apps (please wait, this can take a while)...'
+    Write-Output 'Uninstall apps (wait, this can take an while)...'
     try {
 
         if (Test-Path $AiSuite3Path) {
@@ -625,7 +619,7 @@ function Clear-AsusBloat {
         Resolve-Error $_.Exception 'Uninstall apps failed. Manual uninstallation may be required for Aura|LiveDash|AiSuite3'
     }
 
-    Write-Output 'Running Uninstall Tool (please wait, this can take a while)...'
+    Write-Output 'Running Uninstall Tool (wait, this can take an while)...'
     try {
         $UninstallSetup = (Get-ChildItem '..\Apps\UninstallTool\*Armoury Crate Uninstall Tool.exe' -Recurse).FullName
         Start-Process $UninstallSetup -ArgumentList '-silent' -Wait
@@ -906,12 +900,12 @@ function Set-AsusService {
     If a local LastProfile exists will update the profile and set the services to manual startup and disable all ASUS Tasks
 #>
 function Update-AsusService {
-    Write-Host 'Setting profiles for LightingService (wait)...'
+    Write-Host 'Setting profiles for LightingService (wait, this will take an while)...'
 
     #Asus LightingService is too sensitive and some times don't load profiles properly
     try {
         Start-Service -Name 'LightingService' -ErrorAction Stop
-        Start-Sleep 15
+        Start-Sleep 90
         Stop-Service -Name 'LightingService' -ErrorAction Stop
     } catch {
         Resolve-Error $_.Exception
@@ -921,16 +915,26 @@ function Update-AsusService {
     Copy-Item '..\Patches\Profiles\OledLastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\OledLastProfile.xml" -Force -ErrorAction SilentlyContinue
     Start-Service -Name 'LightingService' -ErrorAction SilentlyContinue
 
-    #Wait a bit for the LightingService set the profile
-    Start-Sleep 15
+    #Wait a bit for the LightingService set the profile. A all modules setup take an while
+    Start-Sleep 90
 
-    #For those who already have a profile
+    #To only leave ASUS services and processes running when necessary
     if ((Read-Host 'Set services to manual startup and disable tasks? [Y] Yes [N] No') -eq 'Y') {
         Write-Host 'Setting services to manual startup...'
         Set-Service -Name 'LightingService' -StartupType Manual -ErrorAction SilentlyContinue
         Set-Service -Name 'asHmComSvc' -StartupType Manual -ErrorAction SilentlyContinue
         Set-Service -Name 'asComSvc' -StartupType Manual -ErrorAction SilentlyContinue
+        Set-Service -Name 'AsusCertService' -StartupType Manual -ErrorAction SilentlyContinue
 
+        #Bring some sense to this madness
+        Write-Host 'Updating services dependencies...'
+        Invoke-Expression "sc.exe config asComSvc depend= RPCSS/AsusCertService" | Out-Null
+        Invoke-Expression "sc.exe config LightingService depend= RPCSS/asComSvc" | Out-Null
+        if ($SetupSettings.HasLiveDash) {
+            Invoke-Expression "sc.exe config asHmComSvc depend= RPCSS/asComSvc" | Out-Null
+        }
+
+        #Mostly to disable ASUS Update tasks
         Write-Host 'Disabling ASUS tasks...'
         Get-ScheduledTask -TaskPath "\Asus\*" | Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
     }
