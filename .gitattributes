@@ -1,3 +1,2 @@
-* text eol=lf
 Source/Setups/** filter=lfs diff=lfs merge=lfs -text
 Patches/** filter=lfs diff=lfs merge=lfs -text
