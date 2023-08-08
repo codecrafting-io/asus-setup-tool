@@ -6,7 +6,6 @@
 [![Github All Releases](https://img.shields.io/github/downloads/codecrafting-io/asus-setup-tool/total)]()
 [![Issues](https://img.shields.io/github/issues/codecrafting-io/asus-setup-tool)](https://github.com/codecrafting-io/asus-setup-tool/issues)
 
-
 This is an PowerShell script tool that manages the setup installation for the legacy [Aura Sync](https://www.ASUS.com/campaign/aura), LiveDash, [AiSuite3](https://www.youtube.com/watch?v=MVS2Bx8Uofg), to FINNALY resolve installation errors on Windows 11. With this tool, you will:
 
 - Download Aura Sync, LiveDash, AiSuite3 directly from ASUS site.
@@ -59,8 +58,7 @@ This is an PowerShell script tool that manages the setup installation for the le
 
     ![ASUS Setup Tool Finished with success](https://www.memesmonkey.com/images/memesmonkey/ba/ba0418a6baea139993fc38eb95f5da04.jpeg)
 
-
-# Automatic set of profiles
+## Automatic set of profiles
 
 If you create a folder "Profiles" inside "Patches" and put the files `LastProfile.xml` and `OledLastProfile.xml` from previous `LightingService` installations, the ASUS Setup Tool will set those profiles after the installation. Also, a new option will appear to set "Set services to manual startup and disable tasks". This will disable ASUS Tasks (mostly for ASUS Update), update the services `ASUS Com Service`, `ASUS HM Com Service` (LiveDash only), `AsusCertService` and `LightingService` to manual startup, and also update their dependencies to they start properly when launching the applications. Note, the apps may take a while to start using this.
 
