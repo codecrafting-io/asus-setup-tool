@@ -2,8 +2,8 @@
 
 ![ASUS Setup Tool](/Source/Images/title.png?raw=true)
 
-[![GitHub Release](https://img.shields.io/github/v/tag/codecrafting-io/asus-setup-tool?label=version)]()
-[![Github All Releases](https://img.shields.io/github/downloads/codecrafting-io/asus-setup-tool/total)]()
+![GitHub Release](https://img.shields.io/github/v/tag/codecrafting-io/asus-setup-tool?label=version)
+![GitHub all releases](https://img.shields.io/github/downloads/codecrafting-io/asus-setup-tool/total)
 [![Issues](https://img.shields.io/github/issues/codecrafting-io/asus-setup-tool)](https://github.com/codecrafting-io/asus-setup-tool/issues)
 
 This is an PowerShell script tool that manages the setup installation for the legacy [Aura Sync](https://www.ASUS.com/campaign/aura), LiveDash, [AiSuite3](https://www.youtube.com/watch?v=MVS2Bx8Uofg), to FINNALY resolve installation errors on Windows 11. With this tool, you will:
@@ -77,7 +77,7 @@ Some of known issues:
 - Aura Sync failed to install: This usually happens due to failure of installation of `LightingService`. Reboot the system and run ASUS Setup Tool again.
 - Waiting to service stop: Sometimes some services or running drivers don't have an easy stop during the uninstallation. Reboot the system and try again.
 - The `GET ASUS SETUP` fails: This usually happens due to changing a setup from with to without LiveDash or vice versa. Just try again.
-- The `SET ASUS SERVER` fails: Reboot the system and try again. You may have to disable or uninstall the antivirus.
+- The `SET ASUS SERVICE` fails: Reboot the system and try again. You may have to disable or uninstall the antivirus.
 - The [Windows core insolation](https://www.makeuseof.com/core-isolation-memory-integrity-windows/#:~:text=On%20the%20left%20side%20menu%20of%20the%20Windows%20Security%20app,the%20changes%20to%20take%20effect.) can interphere with the operation of ASUS Kernerl drivers.
 
 If you still have errors using the tool, open a PowerShell as a Administrator, navigate to the directory where you extract the tool, type the command `$global:DebugPreference = 'Continue'` and then `.\Setup.bat` to run ASUS Setup Tool. Copy the text for a `.txt` file and open a issue.

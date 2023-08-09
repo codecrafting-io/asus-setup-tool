@@ -23,7 +23,7 @@ try {
 
 
 
-Write-Host "GET ASUS SETUP" -ForegroundColor Green
+Write-Host 'GET ASUS SETUP' -ForegroundColor Green
 $HasLiveDash = Read-Host 'Do you want LiveDash (controls OLED screen)? [Y] Yes [N] No'
 if ($HasLiveDash -eq 'Y') {
     Write-Warning 'LiveDash requirements may not be compatible with products **AFTER 2020**'

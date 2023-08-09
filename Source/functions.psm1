@@ -29,7 +29,7 @@ function Resolve-Error {
     Write-Debug $Exception
     Write-Host "`n$($Exception.Message)" -ForegroundColor Red
     Write-Host "`n$Message" -ForegroundColor Red
-    Read-Host -Prompt "Press [ENTER] to exit"
+    Read-Host -Prompt 'Press [ENTER] to exit'
 
     Exit
 }
@@ -59,10 +59,7 @@ function Convert-UnicodeToEmoji {
 
 <#
 .SYNOPSIS
-    Check file Setup Integrity. Throws error if failed
-
-.PARAMETER Unicode
-The unicode string. Cannot be null or empty
+    Check file Setup Integrity
 
 .EXAMPLE
     Compare-SetupIntegrity
@@ -71,7 +68,7 @@ function Compare-SetupIntegrity {
     [CmdletBinding()]
     Param ()
 
-    Write-Host 'checking file integrity...'
+    Write-Host 'Checking file integrity...'
 
     try {
         $IntegrityList = Get-Content -Raw '..\Source\lock.json' | ConvertFrom-Json -ErrorAction Stop
@@ -79,7 +76,7 @@ function Compare-SetupIntegrity {
         Resolve-Error $_.Exception 'failed to check integrity'
     }
 
-    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value 'F71A8B3B46808C79555EA7A1010CE8F4CC38DC082F58E6DC9FB6A50762B0A01D'
+    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value '9DC3853D897057E458DBC8EC02913ADA477369C2C270CFAE0A4C2DC749243052'
     $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\lock.json' -Value '3E1F107A7A8416E16978C6D04613A5840B883BDC4FE4324C97EF2DDB8ACADF75'
     foreach ($File in $IntegrityList.PSObject.Properties) {
         try {
@@ -239,13 +236,9 @@ function Read-HostColor {
     Read-Host
 }
 
-
-<#
-    Copy Item showing a progress. Returns true if successfull or throw an exception if failed
-#>
 <#
 .SYNOPSIS
-    Copy Item showing a progress.
+    Copy Item showing a progress. Returns true if successfull or throw an exception if failed
 
 .PARAMETER Source
     The source path to be copied (Mandatory)
@@ -354,7 +347,7 @@ function Copy-ItemWithProgress
     Remove a System service or driver
 
 .PARAMETER Name
-The name of the service or Driver
+    The name of the service or Driver
 
 .EXAMPLE
     Remove-LocalService -Name 'ServiceName'
@@ -432,7 +425,7 @@ function Get-ASUSSetup {
             Write-Host 'Downloading LiveDash...'
             Invoke-WebRequest $LiveDashUrl -OutFile '..\Apps\LiveDash.zip'
         } else {
-            Write-Warning "LiveDash already downloaded. Extracting..."
+            Write-Warning 'LiveDash already downloaded. Extracting...'
         }
         if ((Get-FileHash '..\Apps\LiveDash.zip' -Algorithm SHA256).Hash -ne $SetupSettings.LiveDashHash)  {
             Remove-Item '..\Apps\LiveDash.zip' -Force -ErrorAction Stop
@@ -447,7 +440,7 @@ function Get-ASUSSetup {
         Write-Host "Downloading AiSuite3 (installation optional)..."
         Invoke-WebRequest $SetupSettings.AiSuite3Url -OutFile '..\Apps\AiSuite3.zip'
     } else {
-        Write-Warning "AiSuite3 already downloaded (installation optional). Extracting..."
+        Write-Warning 'AiSuite3 already downloaded (installation optional). Extracting...'
     }
     if ((Get-FileHash '..\Apps\AiSuite3.zip' -Algorithm SHA256).Hash -ne $SetupSettings.AiSuite3Hash)  {
         Remove-Item '..\Apps\AiSuite3.zip' -Force -ErrorAction Stop
@@ -461,7 +454,7 @@ function Get-ASUSSetup {
         Write-Host 'Downloading AuraSync...'
         Invoke-WebRequest $SetupSettings.AuraSyncUrl -OutFile '..\Apps\AuraSync.zip'
     } else {
-        Write-Warning "AuraSync already downloaded. Extracting..."
+        Write-Warning 'AuraSync already downloaded. Extracting...'
     }
     if ((Get-FileHash '..\Apps\AuraSync.zip' -Algorithm SHA256).Hash -ne $SetupSettings.AuraSyncHash)  {
         Remove-Item '..\Apps\AuraSync.zip' -Force -ErrorAction Stop
@@ -475,7 +468,7 @@ function Get-ASUSSetup {
         Write-Host 'Downloading Armoury Crate Uninstall Tool...'
         Invoke-WebRequest $SetupSettings.UninstallToolUrl -OutFile '..\Apps\UninstallTool.zip'
     } else {
-        Write-Warning "Armoury Crate Uninstall Tool already downloaded. Extracting..."
+        Write-Warning 'Armoury Crate Uninstall Tool already downloaded. Extracting...'
     }
     if ((Get-FileHash '..\Apps\UninstallTool.zip' -Algorithm SHA256).Hash -ne $SetupSettings.UninstallToolHash)  {
 
@@ -485,12 +478,9 @@ function Get-ASUSSetup {
         }
     }
     Remove-Item '..\Apps\UninstallTool\*' -Recurse -ErrorAction SilentlyContinue
-    Expand-Archive '..\Apps\UninstallTool.zip' -DestinationPath "..\Apps\UninstallTool\" -Force -ErrorAction Stop
+    Expand-Archive '..\Apps\UninstallTool.zip' -DestinationPath '..\Apps\UninstallTool\' -Force -ErrorAction Stop
 }
 
-<#
-    Clear and Nuke Asus Bloatware stuff
-#>
 <#
 .SYNOPSIS
     Clear, Uninstall, Removes, Delete, Purge and Nuke Asus Bloatware
@@ -581,7 +571,7 @@ function Clear-AsusBloat {
             Start-Process "${Env:ProgramData}\ASUS\AI Suite III\Setup.exe" -ArgumentList '-u -s' -Wait
             Start-Sleep 1
         }
-        if (Test-Path "$LiveDashUninstaller") {
+        if (Test-Path $LiveDashUninstaller) {
             Write-Host 'Uninstalling LiveDash...'
 
             #InstallShield Setup.exe is missing after silent install.
@@ -590,7 +580,7 @@ function Clear-AsusBloat {
             Start-Process "$LiveDashUninstaller\Setup.exe" -ArgumentList "-l0x9 -x -s -ARP -f1`"$LiveDashUninstaller\uninstall.iss`"" -Wait
             Start-Sleep 1
         }
-        if (Test-Path "$AuraUninstaller") {
+        if (Test-Path $AuraUninstaller) {
             Write-Host 'Uninstalling AuraSync...'
 
             #InstallShield Setup.exe is missing after silent install.
@@ -933,14 +923,14 @@ function Update-AsusService {
 
         #Bring some sense to this madness
         Write-Host 'Updating services dependencies...'
-        Invoke-Expression "sc.exe config asComSvc depend= RPCSS/AsusCertService" | Out-Null
-        Invoke-Expression "sc.exe config LightingService depend= RPCSS/asComSvc" | Out-Null
+        Invoke-Expression 'sc.exe config asComSvc depend= RPCSS/AsusCertService' | Out-Null
+        Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asComSvc' | Out-Null
         if ($SetupSettings.HasLiveDash) {
-            Invoke-Expression "sc.exe config asHmComSvc depend= RPCSS/asComSvc" | Out-Null
+            Invoke-Expression 'sc.exe config asHmComSvc depend= RPCSS/asComSvc' | Out-Null
         }
 
         #Mostly to disable ASUS Update tasks
         Write-Host 'Disabling ASUS tasks...'
-        Get-ScheduledTask -TaskPath "\Asus\*" | Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
+        Get-ScheduledTask -TaskPath '\Asus\*' | Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
     }
 }
