@@ -2,8 +2,7 @@
 
 ![ASUS Setup Tool](/Source/Images/title.png?raw=true)
 
-![GitHub Release](https://img.shields.io/github/v/tag/codecrafting-io/asus-setup-tool?label=version)
-![GitHub all releases](https://img.shields.io/github/downloads/codecrafting-io/asus-setup-tool/total)
+[![GitHub Release](https://img.shields.io/github/v/tag/codecrafting-io/asus-setup-tool?label=version)](https://github.com/codecrafting-io/asus-setup-tool/releases)
 [![Issues](https://img.shields.io/github/issues/codecrafting-io/asus-setup-tool)](https://github.com/codecrafting-io/asus-setup-tool/issues)
 
 This is an PowerShell script tool that manages the setup installation for the legacy [Aura Sync](https://www.ASUS.com/campaign/aura), LiveDash, [AiSuite3](https://www.youtube.com/watch?v=MVS2Bx8Uofg), to FINNALY resolve installation errors on Windows 11. With this tool, you will:
@@ -66,7 +65,7 @@ If you create a folder "Profiles" inside "Patches" and put the files `LastProfil
 
 Some of known issues:
 
-- AuraSync takes too long to open: This can happen due to the module's initialization of `LightingService`. You can opt to no install some modules during setup.
+- AuraSync takes too long to open: This can happen due to the module's initialization of `LightingService`. You can opt to not install some modules during setup.
 - AuraSync is not opening: This is due to `LightingService` not running or even not installed.
   - Reboot the system.
   - Go to the `Apps\AuraSync` folder of the ASUS Setup Tool and locate the `AuraServiceSetup.exe` file inside `LightingService` folder.
