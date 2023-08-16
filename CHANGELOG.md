@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.2
+
+- Improved removal of ASUS services and drivers
+- Remove Ryzen Master driver added by AiSuite 3 when not uninstalled
+
 ## v0.2.1
 
 - Minor code revision

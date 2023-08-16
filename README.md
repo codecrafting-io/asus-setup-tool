@@ -84,13 +84,13 @@ If you still have errors using the tool, open a PowerShell as a Administrator, n
 
 ## Settings
 
-Inside `Source` folder have a `settings.json` configuration file which determines URLs for downloading the applications. Note if you change it you must update hash file integrity validation.
+Inside `Source` folder have a `settings.json` configuration file which determines URLs for downloading the applications. Note if you change it, you must update hash file integrity validation.
 
 ## How it works
 
 This was years in the making, trying to understand what's going on every spare time that I had. ASUS software still to this day is messy, bloated and potentially insecure. For many people this tool may not even be ideal to be frank, you may want to ditch ASUS products or even go for alternative software like [OpenRGB](https://openrgb.org/), [FanContol](https://getfancontrol.com/), [SignalRGB](https://signalrgb.com/).
 
-One of the main issues of ASUS software, it's the **dependency nightmare**. Multiple setups depend on the same library, services and assets, but that aren't consistent between installations. ASUS has a very modular setup, which can be seen as a good thing, but not in the way it was implemented, with almost no cohesion, and end up with a lot of services and maybe unnecessary Kernel level access drivers. ASUS software have key software components:
+One of the main issues of ASUS software, it's the **dependency nightmare**. Multiple setups depend on the same library, services and assets, but that aren't consistent between installations. ASUS has a very modular setup, which can be seen as a good thing, but not in the way it was implemented, with almost no cohesion, and end up with a lot of services and maybe unnecessary Kernel level access drivers. ASUS software has the following key software components:
 
 - ASUS COM Service (atkexCom, aka AXSP)
 - ASUS Cert Service
@@ -101,7 +101,7 @@ In the past the ASUS Cert Service did not exist, but after the [vulnerabilities]
 Knowing this, what is done here was:
 
 - Create a better consistent dependency services and assets, for ASIO, AXSP, using the latest files from Armoury Crate installation. You can find them on `Patches` folder
-- Proper setup of AXSP and AsusCertService before AuraSync/LiveDash installation. The easiest way found was just launching the AiSuite 3 setup. When launched, both services are installed, even if you don't do anything in the wizard setup. The ASUS Setup quickly launches the AiSuite 3 after being patched and as soon the wizard opens the services are installed and setup can be closed
+- Proper setup of AXSP and AsusCertService before AuraSync/LiveDash installation. The easiest way found was just launching the AiSuite 3 setup. When launched, both services are installed, even if you don't do anything in the wizard setup. The ASUS Setup quickly launches the AiSuite 3 after being patched and as soon the wizard opens the services are installed and setup can be closed.
 - LiveDash was the hardest to understand, and the solution found still not optimal but functional. The problem of installing LiveDash after or before AuraSync is that it is very likely you see a message like `ASUS's device no found !!` or the App won't even open. After decompiling the application, it was noticed that was related to the LightingService and MBIsSupported.dll, but not entirely. This section inside `MainWindow.xaml.cs` is key for LiveDash function:
 
     ```c#
@@ -129,15 +129,15 @@ Knowing this, what is done here was:
     ```
 
 - This will determine what kind of device you have installed, and despite AuraSync may work and detect the products, LiveDash won't. If the `Oled_GetCapability` returns an XML with `<AsusMB>0</AsusMB>` the LiveDash won't work or even open for motherboard products. In order to "fix this" it was necessary to get the older `AuraServiceSetup.exe` aka LightingService, and most importantly the `AacMBSetup.exe` from [AuraSync 1.07.22](https://www.reddit.com/r/ASUS/comments/eh1ouk/asus_aura_archived_versions/).
-- The older `AacMBSetup.exe` and `AuraServiceSetup.exe` replaces the existing setups inside AuraSync before installation. Strangely enougth the main components of `AacMBSetup.exe` are the dlls `Aac3572MbHal` aren't the cause of incompatibility, so because of this the newer `AacMBSetup.exe` is reinstalled after to make AuraSync functions properly. The key thing here is something is register in the system using the old `AacMBSetup.exe` which makes LiveDash, even if it doesn't depend on it.
+- The older `AacMBSetup.exe` and `AuraServiceSetup.exe` replaces the existing setups inside AuraSync before installation. Strangely enough the main components of `AacMBSetup.exe` are the dlls `Aac3572MbHal` aren't the cause of incompatibility, so because of this the newer `AacMBSetup.exe` is reinstalled after to make AuraSync functions properly. The key thing here is something is register in the system using the old `AacMBSetup.exe` which makes LiveDash, even if it doesn't depend on it.
 In addition to this, the old `LightingService.exe` is also required to LiveDash actually works, not just launch.
 
 ## Final considerations
 
-I don't have a lot of experience with .NET or PowerShell projects, so feel free to help to improve this project and the setup process, specially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/681b96ecbd615b49ffb66b21774965b8feeeb2c2cb9784779246309f07fd9076/relations) detections, all patches assets used are from the latest ArmouryCrate, and the older `AacMBSetup.exe` and `AuraServiceSetup` are necessary for LiveDash installtion in the current state of the tool, **so use this tool at your own risk**.
+I don't have a lot of experience with .NET or PowerShell projects, so feel free to help to improve this project and the setup process, especially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/681b96ecbd615b49ffb66b21774965b8feeeb2c2cb9784779246309f07fd9076/relations) detections, all patches assets used are from the latest ArmouryCrate, and the older `AacMBSetup.exe` and `AuraServiceSetup` are necessary for LiveDash installtion in the current state of the tool, **so use this tool at your own risk**.
 
 It's not necessary to leave `LightingService`, `ASUS COM Service` running all the time to keep your RGB settings. Once you set, you can [open the services](https://www.wikihow.com/Open-Windows-Services) to open the properties of each service and set the initialization type for manual. You only need to reopen the AuraSync if a power loss happens.
 
-This tool was making in the feeling of **REALLY NOT LIKING ARMOURY CRATE**. I hope this helps, I finally bring some balance to the force 😁
+This tool was making in the feeling of **REALLY NOT LIKING ARMOURY CRATE**. I hope this helps to finally bring some balance to the force 😁
 
 > Made with :heart: by [@lucasmarotta](https://github.com/lucasmarotta).
