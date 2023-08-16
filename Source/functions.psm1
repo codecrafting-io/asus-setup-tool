@@ -76,7 +76,7 @@ function Compare-SetupIntegrity {
         Resolve-Error $_.Exception 'failed to check integrity'
     }
 
-    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value '9DC3853D897057E458DBC8EC02913ADA477369C2C270CFAE0A4C2DC749243052'
+    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value '411B3D1974A719BB61B9FBB9543BBA670EA2AD6098A9D648B10E81B2A095850E'
     $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\lock.json' -Value '3E1F107A7A8416E16978C6D04613A5840B883BDC4FE4324C97EF2DDB8ACADF75'
     foreach ($File in $IntegrityList.PSObject.Properties) {
         try {
@@ -205,6 +205,46 @@ function Remove-FileFolder {
     }
     if ($LastException) {
         throw $LastException
+    }
+}
+
+<#
+.SYNOPSIS
+Start a sleep command with countdown
+
+.PARAMETER Message
+The message to be printed (mandatory)
+
+.PARAMETER Seconds
+The amout of time to sleep (mandatory)
+
+.EXAMPLE
+    Start-SleepCountdown -Message 'Message' -Seconds 10
+
+.EXAMPLE
+    Start-SleepCountdown -Message 'Message' -Seconds 10 -NoNewLine
+#>
+function Start-SleepCountdown {
+
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory)]
+        [String] $Message,
+
+        [Parameter(Mandatory)]
+        [int] $Seconds,
+
+        [Parameter()]
+        [switch] $NoNewLine = $False
+    )
+
+    $Digits = "$Seconds".Length
+    for ($Timer = $Seconds; $Timer -ge 0; $Timer--) {
+        Write-Host "`r$Message $("$Timer".PadLeft($Digits, '0'))`s" -NoNewLine -ForegroundColor Yellow
+        Start-Sleep 1
+    }
+    if (-Not $NoNewLine) {
+        Write-Host ' '
     }
 }
 
@@ -344,21 +384,18 @@ function Copy-ItemWithProgress
 
 <#
 .SYNOPSIS
-    Remove a System service or driver
+    Remove a system service or driver
 
 .PARAMETER Name
     The name of the service or Driver
 
 .EXAMPLE
-    Remove-LocalService -Name 'ServiceName'
+    Remove-DriverService -Name 'Driver|Service name'
 
 .LINK
     Links to further documentation.
-
-.NOTES
-    Only works for the Drivers Asusgio2 or Asusgio3
 #>
-function Remove-LocalService {
+function Remove-DriverService {
 
     [CmdletBinding()]
     Param (
@@ -366,15 +403,24 @@ function Remove-LocalService {
         [String][ValidateNotNullOrEmpty()] $Name
     )
 
-    if (Get-Command 'Remove-Service' -errorAction SilentlyContinue) {
-        Remove-Service -Name $Service
+    $Object = Get-CimInstance -Class Win32_SystemDriver -Filter "Name='$Name'"
+    $ObjectType = 'service'
+    if ($Object) {
+        $ObjectType = 'driver'
+    }
+    if ($ObjectType -eq 'service') {
+        $Object = Get-CimInstance -Class Win32_Service -Filter "Name='$Name'"
+    }
+
+    #First stop
+    Write-Information "Stopping $ObjectType '$Name'"
+    Stop-Service -Name $Name -Force
+
+    Write-Information "Removing $ObjectType '$Name'"
+    if (Get-Command 'Remove-Service' -ErrorAction SilentlyContinue) {
+        Remove-Service -Name $Name
     } else {
-        if (($Name -eq 'Asusgio2') -or ($Name -eq 'Asusgio3') -or ($Name -eq 'GLCKIO2')) {
-            $Service = Get-WmiObject -Class Win32_SystemDriver -Filter "Name='$Name'"
-        } else {
-            $Service = Get-WmiObject -Class Win32_Service -Filter "Name='$Name'"
-        }
-        $Service.Delete() | Out-Null
+        $Object | Remove-CimInstance
     }
 }
 
@@ -437,10 +483,10 @@ function Get-ASUSSetup {
 
     #AISUITE
     if (-Not (Test-Path '..\Apps\AiSuite3.zip')) {
-        Write-Host "Downloading AiSuite3 (installation optional)..."
+        Write-Host "Downloading AiSuite3 (installation is optional)..."
         Invoke-WebRequest $SetupSettings.AiSuite3Url -OutFile '..\Apps\AiSuite3.zip'
     } else {
-        Write-Warning 'AiSuite3 already downloaded (installation optional). Extracting...'
+        Write-Warning 'AiSuite3 already downloaded (installation is optional). Extracting...'
     }
     if ((Get-FileHash '..\Apps\AiSuite3.zip' -Algorithm SHA256).Hash -ne $SetupSettings.AiSuite3Hash)  {
         Remove-Item '..\Apps\AiSuite3.zip' -Force -ErrorAction Stop
@@ -565,12 +611,20 @@ function Clear-AsusBloat {
 
     Write-Output 'Uninstall apps (wait, this can take an while)...'
     try {
-
         if (Test-Path $AiSuite3Path) {
             Write-Host 'Uninstalling AiSuite 3...'
             Start-Process "${Env:ProgramData}\ASUS\AI Suite III\Setup.exe" -ArgumentList '-u -s' -Wait
             Start-Sleep 1
         }
+
+        #AI Suite III may leave a Ryzen Master Kernel Driver inside ASUS folder. Check if even if AiSuite 3 is not installed
+        $RyzenMasterDrv = Get-CimInstance -Class Win32_SystemDriver | Where-Object { $_.PathName -Like '*AI Suite III*' }
+        if ($RyzenMasterDrv) {
+            Write-Host 'Removing AI Suite III Ryzen Master driver...'
+            $RyzenMasterDrv | Stop-Service -Force
+            $RyzenMasterDrv | Remove-CimInstance
+        }
+
         if (Test-Path $LiveDashUninstaller) {
             Write-Host 'Uninstalling LiveDash...'
 
@@ -622,19 +676,10 @@ function Clear-AsusBloat {
         Resolve-Error $_.Exception 'Uninstall tool failed'
     }
 
-    Write-Output 'Removing services...'
+    Write-Output 'Removing services and drivers...'
     foreach ($Service in $Services) {
-        Write-Information "Stopping service '$Service'"
         try {
-            Stop-Service -Name "$Service" -ErrorAction Stop
-        }
-        catch {
-            Write-Debug $_.Exception
-        }
-
-        Write-Information "Removing service '$Service'"
-        try {
-            Remove-LocalService -Name $Service -ErrorAction Stop
+            Remove-DriverService -Name $Service -ErrorAction Stop
         } catch {
             Write-Debug $_.Exception
         }
@@ -900,7 +945,7 @@ function Update-AsusService {
     #Asus LightingService is too sensitive and some times don't load profiles properly
     try {
         Start-Service -Name 'LightingService' -ErrorAction Stop
-        Start-Sleep 90
+        Start-SleepCountdown -Message 'Reset LightingService profiles: This will take:' -Seconds 90 -NoNewLine
         Stop-Service -Name 'LightingService' -ErrorAction Stop
     } catch {
         Resolve-Error $_.Exception
@@ -911,7 +956,7 @@ function Update-AsusService {
     Start-Service -Name 'LightingService' -ErrorAction SilentlyContinue
 
     #Wait a bit for the LightingService set the profile. A all modules setup take an while
-    Start-Sleep 90
+    Start-SleepCountdown -Message 'Set new LightingService profiles: This will take:' -Seconds 90
 
     #To only leave ASUS services and processes running when necessary
     if ((Read-Host 'Set services to manual startup and disable tasks? [Y] Yes [N] No') -eq 'Y') {

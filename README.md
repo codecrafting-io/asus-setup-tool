@@ -20,7 +20,7 @@ This is an PowerShell script tool that manages the setup installation for the le
 **NOTE: Before you proceed, note that this tool is experimental, still in early stages, provided as is and may not work or require manual tweaking.**
 
 - Create a System Restore point (recommended), [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
-- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.2.0.zip).
+- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.2.2.zip).
 - Extract the zip contents to a folder.
 - If you have a third party antivirus, you **may have to add the setup to exclusions, disable or even uninstall it**, specially if it is a Kaspersky product. After this reboot the system and then proceed. You can re-enable/re-install the antivirus later.
 - Right click on `setup.bat` and `run as administrator`.
@@ -75,6 +75,7 @@ Some of known issues:
 
 - Aura Sync failed to install: This usually happens due to failure of installation of `LightingService`. Reboot the system and run ASUS Setup Tool again.
 - Waiting to service stop: Sometimes some services or running drivers don't have an easy stop during the uninstallation. Reboot the system and try again.
+- The InstallShield Engine could not be installed: This likely happens during the uninstallation of one of the Apps, as a result of setup interruption or failure to uninstall. Click ok and then proceed. This won't interfere on uninstallation.
 - The `GET ASUS SETUP` fails: This usually happens due to changing a setup from with to without LiveDash or vice versa. Just try again.
 - The `SET ASUS SERVICE` fails: Reboot the system and try again. You may have to disable or uninstall the antivirus.
 - The [Windows core insolation](https://www.makeuseof.com/core-isolation-memory-integrity-windows/#:~:text=On%20the%20left%20side%20menu%20of%20the%20Windows%20Security%20app,the%20changes%20to%20take%20effect.) can interphere with the operation of ASUS Kernerl drivers.

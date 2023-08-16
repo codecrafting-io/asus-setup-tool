@@ -13,7 +13,6 @@ if (-Not (Get-IsWindows11)) {
 Import-Config
 Write-HeaderTitle
 
-
 $HasAiSuite = Test-Path "${Env:ProgramFiles(x86)}\Asus\AI Suite III\AISuite3.exe"
 try {
     New-Item '..\Apps' -ItemType Directory -Force | Out-Null
@@ -102,7 +101,7 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
     } catch {
         Resolve-Error $_.Exception
     }
-    Start-Sleep 2
+    Start-Sleep 5
 
 
 
