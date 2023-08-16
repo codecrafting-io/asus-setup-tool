@@ -129,7 +129,7 @@ Knowing this, what is done here was:
     ```
 
 - This will determine what kind of device you have installed, and despite AuraSync may work and detect the products, LiveDash won't. If the `Oled_GetCapability` returns an XML with `<AsusMB>0</AsusMB>` the LiveDash won't work or even open for motherboard products. In order to "fix this" it was necessary to get the older `AuraServiceSetup.exe` aka LightingService, and most importantly the `AacMBSetup.exe` from [AuraSync 1.07.22](https://www.reddit.com/r/ASUS/comments/eh1ouk/asus_aura_archived_versions/).
-- The older `AacMBSetup.exe` and `AuraServiceSetup.exe` replaces the existing setups inside AuraSync before installation. Strangely enough the main components of `AacMBSetup.exe` are the dlls `Aac3572MbHal` aren't the cause of incompatibility, so because of this the newer `AacMBSetup.exe` is reinstalled after to make AuraSync functions properly. The key thing here is something is register in the system using the old `AacMBSetup.exe` which makes LiveDash, even if it doesn't depend on it.
+- The older `AacMBSetup.exe` and `AuraServiceSetup.exe` replaces the existing setups inside AuraSync before installation. Strangely enough the main components of `AacMBSetup.exe` are the dlls `Aac3572MbHal` and they aren't the cause of incompatibility, so because of this the newer `AacMBSetup.exe` is reinstalled after to make AuraSync functions properly. The key thing here is something is register in the system using the old `AacMBSetup.exe` which makes LiveDash work, even if it doesn't depend on the main libraries.
 In addition to this, the old `LightingService.exe` is also required to LiveDash actually works, not just launch.
 
 ## Final considerations
