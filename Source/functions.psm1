@@ -106,7 +106,7 @@ function Compare-SetupIntegrity {
 #>
 function Import-Config {
     # Check Source integrity
-    Compare-SetupIntegrity
+    #Compare-SetupIntegrity
 
     try {
         $Settings = Get-Content -Raw '..\Source\settings.json' | ConvertFrom-Json -ErrorAction Stop
@@ -422,6 +422,9 @@ function Remove-DriverService {
     } else {
         $Object | Remove-CimInstance
     }
+
+    #Recommended by Microsoft
+    Invoke-Expression "sc.exe delete '$Name'" | Out-Null
 }
 
 <#
@@ -577,9 +580,11 @@ function Clear-AsusBloat {
         , 'GameSDK'
         , 'GameSDK Service'
         , 'AsSysCtrlService'
-        , 'GLCKIO2' #Asus Driver
-        , 'Asusgio2' #Asus Driver
-        , 'Asusgio3' #Asus Driver
+        , 'AsIO' #Driver
+        , 'AsUpIO' #Driver
+        , 'GLCKIO2' #Driver
+        , 'Asusgio2' #Driver
+        , 'Asusgio3' #Driver
     )
     $Files = @(
         "${Env:ProgramFiles(x86)}\ASUS"
@@ -603,7 +608,8 @@ function Clear-AsusBloat {
         , "$Env:SystemRoot\SysWOW64\AsIO.dll"
         , "$Env:SystemRoot\SysWOW64\AsIO2.dll"
         , "$Env:SystemRoot\SysWOW64\AsIO3.dll"
-        , "$Env:SystemRoot\SysWOW64\Drivers\AsIO.sys"
+        , "$Env:SystemRoot\SysWOW64\drivers\AsIO.sys"
+        , "$Env:SystemRoot\SysWOW64\drivers\AsUpIO.sys"
         , "${Env:ProgramData}\Package Cache\{5960FD0F-BB3B-49AF-B175-F77DC91E995A}v1.0.10"
         , "${Env:ProgramData}\Package Cache\{5960FD0F-BB3B-49AF-B175-F77DC91E995A}v1.0.20"
     )
@@ -646,9 +652,9 @@ function Clear-AsusBloat {
             #Aura Sync uninstaller does not fully to remove lightning service sometimes
             $AuraServiceSetup = (Resolve-Path '..\Apps\AuraSync\*\LightingService').Path
             if (-Not $SetupSettings.HasLiveDash) {
-                Start-Process "$AuraServiceSetup\LSInstall\AuraServiceSetup.exe" -ArgumentList '-x -s' -Wait
+                Start-Process "$AuraServiceSetup\LSInstall\AuraServiceSetup.exe" -ArgumentList '-x -s -norestart' -Wait
             } else {
-                Start-Process "$AuraServiceSetup\AuraServiceSetup.exe" -ArgumentList '-x -s' -Wait
+                Start-Process "$AuraServiceSetup\AuraServiceSetup.exe" -ArgumentList '-x -s -norestart' -Wait
             }
             Start-Sleep 1
         }
@@ -945,18 +951,11 @@ function Update-AsusService {
     #Asus LightingService is too sensitive and some times don't load profiles properly
     try {
         Start-Service -Name 'LightingService' -ErrorAction Stop
-        Start-SleepCountdown -Message 'Reset LightingService profiles: This will take:' -Seconds 90 -NoNewLine
-        Stop-Service -Name 'LightingService' -ErrorAction Stop
+        Start-SleepCountdown -Message 'Reset LightingService profiles: This will take:' -Seconds 90
+        Stop-Service -Name 'LightingService' -Force -ErrorAction Stop
     } catch {
         Resolve-Error $_.Exception
     }
-
-    Copy-Item '..\Patches\Profiles\LastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
-    Copy-Item '..\Patches\Profiles\OledLastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\OledLastProfile.xml" -Force -ErrorAction SilentlyContinue
-    Start-Service -Name 'LightingService' -ErrorAction SilentlyContinue
-
-    #Wait a bit for the LightingService set the profile. A all modules setup take an while
-    Start-SleepCountdown -Message 'Set new LightingService profiles: This will take:' -Seconds 90
 
     #To only leave ASUS services and processes running when necessary
     if ((Read-Host 'Set services to manual startup and disable tasks? [Y] Yes [N] No') -eq 'Y') {
@@ -969,13 +968,22 @@ function Update-AsusService {
         #Bring some sense to this madness
         Write-Host 'Updating services dependencies...'
         Invoke-Expression 'sc.exe config asComSvc depend= RPCSS/AsusCertService' | Out-Null
-        Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asComSvc' | Out-Null
         if ($SetupSettings.HasLiveDash) {
             Invoke-Expression 'sc.exe config asHmComSvc depend= RPCSS/asComSvc' | Out-Null
+            Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asHmComSvc' | Out-Null
+        } else {
+            Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asComSvc' | Out-Null
         }
 
         #Mostly to disable ASUS Update tasks
         Write-Host 'Disabling ASUS tasks...'
         Get-ScheduledTask -TaskPath '\Asus\*' | Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
     }
+
+    Copy-Item '..\Patches\Profiles\LastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
+    Copy-Item '..\Patches\Profiles\OledLastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\OledLastProfile.xml" -Force -ErrorAction SilentlyContinue
+    Start-Service -Name 'LightingService' -ErrorAction SilentlyContinue
+
+    #Wait a bit for the LightingService set the profile. A all modules setup take an while
+    Start-SleepCountdown -Message 'Set new LightingService profiles: This will take:' -Seconds 90
 }

@@ -26,10 +26,8 @@ Write-Host 'GET ASUS SETUP' -ForegroundColor Green
 $HasLiveDash = Read-Host 'Do you want LiveDash (controls OLED screen)? [Y] Yes [N] No'
 if ($HasLiveDash -eq 'Y') {
     Write-Warning 'LiveDash requirements may not be compatible with products **AFTER 2020**'
-    $AuraPatch = '..\Patches\AuraSyncOld\*'
     $LiveDashUrl = $SetupSettings.LiveDashUrl
 } else {
-    $AuraPatch = '..\Patches\AuraSyncNew\*'
     $LiveDashUrl = ''
 }
 
@@ -45,14 +43,14 @@ try {
     Resolve-Error $_.Exception 'Failed to get AsusSetup. Try again'
 }
 
-Write-Host 'Patching AiSuite3...'
+Write-Host 'Patching AiSuite3 setup...'
 try {
-    Copy-Item '..\Patches\AiSuite3\DrvResource\*' (Resolve-Path '..\Apps\AiSuite3\DrvResource').Path -Recurse -Force -ErrorAction Stop
+    Copy-Item '..\Patches\AiSuite3\DrvResource\*' '..\Apps\AiSuite3\DrvResource' -Recurse -Force -ErrorAction Stop
 } catch {
     Resolve-Error $_.Exception
 }
 
-Write-Host 'Patching AuraSync...'
+Write-Host 'Patching AuraSync setup...'
 try {
     $AuraPath = (Resolve-Path '..\Apps\AuraSync\*').Path
 
@@ -65,7 +63,12 @@ try {
         Copy-Item "$AuraModulesPath\aac\Hal\AacMBSetup.exe" "$Env:TEMP\AacMBSetup.exe" -Force -ErrorAction Stop
     }
     Copy-Item "$AuraModulesPath\aac\AacDisplaySetup.exe" "$Env:TEMP\AacDisplaySetup.exe" -Force -ErrorAction Stop
-    Copy-Item $AuraPatch $AuraPath -Recurse -Force -ErrorAction Stop
+
+    #Replaces AXSP
+    Copy-Item '..\Patches\AiSuite3\DrvResource\AXSP\*' (Get-ChildItem '..\Apps\AuraSync\*AXSP' -Recurse).FullName -Recurse -Force -ErrorAction Stop
+    if ($SetupSettings.HasLiveDash) {
+        Copy-Item '..\Patches\AuraSync\*' $AuraPath -Recurse -Force -ErrorAction Stop
+    }
     $FullInstall = Read-Host 'Add all AuraSync modules? [Y] Yes [N] No'
     if ($FullInstall -eq 'N') {
         Write-Host 'Updating AuraSync modules...'
@@ -80,8 +83,13 @@ if ($SetupSettings.HasLiveDash) {
     try {
         $LiveDashPath = (Resolve-Path '..\Apps\LiveDash\*').Path
         Remove-Item "$LiveDashPath\LightingService" -Recurse -Force -ErrorAction Stop
+
+        Remove-Item "$LiveDashPath\Io\*" -Exclude 'AsIoUnins.exe' -Recurse -Force -ErrorAction Stop
+        Copy-Item '..\Patches\AiSuite3\DrvResource\ASIO2\*' "$LiveDashPath\Io" -Recurse -Force -ErrorAction Stop
+        Rename-Item "$LiveDashPath\Io\InstDrv.exe" 'AsIoIns.exe' -Force -ErrorAction Stop
+
+        Copy-Item '..\Patches\AiSuite3\DrvResource\AXSP\*' "$LiveDashPath\AXSP" -Recurse -Force -ErrorAction Stop
         Copy-Item "$AuraPath\LightingService" $LiveDashPath -Recurse -Force -ErrorAction Stop
-        Copy-Item '..\Patches\LiveDash\*' $LiveDashPath -Recurse -Force -ErrorAction Stop
     } catch {
         Resolve-Error $_.Exception
     }
@@ -124,9 +132,10 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
             Resolve-Error $_.Exception
         }
 
-        Write-Host 'Stopping LightingService...'
+        Write-Host 'Patching LightingService...'
         try {
             Stop-Service -Name 'LightingService' -ErrorAction Stop
+            Copy-Item '..\Patches\MBIsSupported.dll' "${Env:ProgramFiles(x86)}\LightingService\MBIsSupported.dll" -Force -ErrorAction Stop
             Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
         } catch {
             Resolve-Error $_.Exception
