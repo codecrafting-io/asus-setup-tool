@@ -53,22 +53,14 @@ try {
 Write-Host 'Patching AuraSync setup...'
 try {
     $AuraPath = (Resolve-Path '..\Apps\AuraSync\*').Path
-
-    #First copy newer MB & Display Hal Setups
     if ($SetupSettings.HasLiveDash) {
         $AuraModulesPath = "$AuraPath\LightingService"
-        Copy-Item "$AuraModulesPath\aac\AacMBSetup.exe" "$Env:TEMP\AacMBSetup.exe" -Force -ErrorAction Stop
     } else {
         $AuraModulesPath = "$AuraPath\LightingService\LSInstall"
-        Copy-Item "$AuraModulesPath\aac\Hal\AacMBSetup.exe" "$Env:TEMP\AacMBSetup.exe" -Force -ErrorAction Stop
     }
-    Copy-Item "$AuraModulesPath\aac\AacDisplaySetup.exe" "$Env:TEMP\AacDisplaySetup.exe" -Force -ErrorAction Stop
 
     #Replaces AXSP
     Copy-Item '..\Patches\AiSuite3\DrvResource\AXSP\*' (Get-ChildItem '..\Apps\AuraSync\*AXSP' -Recurse).FullName -Recurse -Force -ErrorAction Stop
-    if ($SetupSettings.HasLiveDash) {
-        Copy-Item '..\Patches\AuraSync\*' $AuraPath -Recurse -Force -ErrorAction Stop
-    }
     $FullInstall = Read-Host 'Add all AuraSync modules? [Y] Yes [N] No'
     if ($FullInstall -eq 'N') {
         Write-Host 'Updating AuraSync modules...'
@@ -84,9 +76,11 @@ if ($SetupSettings.HasLiveDash) {
         $LiveDashPath = (Resolve-Path '..\Apps\LiveDash\*').Path
         Remove-Item "$LiveDashPath\LightingService" -Recurse -Force -ErrorAction Stop
 
+        <#
         Remove-Item "$LiveDashPath\Io\*" -Exclude 'AsIoUnins.exe' -Recurse -Force -ErrorAction Stop
         Copy-Item '..\Patches\AiSuite3\DrvResource\ASIO2\*' "$LiveDashPath\Io" -Recurse -Force -ErrorAction Stop
         Rename-Item "$LiveDashPath\Io\InstDrv.exe" 'AsIoIns.exe' -Force -ErrorAction Stop
+        #>
 
         Copy-Item '..\Patches\AiSuite3\DrvResource\AXSP\*' "$LiveDashPath\AXSP" -Recurse -Force -ErrorAction Stop
         Copy-Item "$AuraPath\LightingService" $LiveDashPath -Recurse -Force -ErrorAction Stop
@@ -139,24 +133,6 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
             Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
         } catch {
             Resolve-Error $_.Exception
-        }
-
-        if (Get-ChildItem "$AuraPath\LightingService\*AacMBSetup.exe" -Recurse) {
-            Write-Host 'Updating MB Hal...'
-            try {
-                Start-Process "$Env:TEMP\AacMBSetup.exe" -ArgumentList '/s /norestart' -Wait -ErrorAction Stop
-            } catch {
-                Resolve-Error $_.Exception
-            }
-        }
-
-        if (Get-ChildItem "$AuraPath\LightingService\*AacDisplaySetup.exe" -Recurse) {
-            Write-Host 'Updating Display Hal...'
-            try {
-                Start-Process "$Env:TEMP\AacDisplaySetup.exe" -ArgumentList '/s /norestart' -Wait -ErrorAction Stop
-            } catch {
-                Resolve-Error $_.Exception
-            }
         }
     }
 

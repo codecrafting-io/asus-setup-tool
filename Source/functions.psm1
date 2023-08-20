@@ -602,6 +602,7 @@ function Clear-AsusBloat {
         , "$Env:SystemRoot\System32\AsIO3.dll"
         , "$Env:SystemRoot\System32\AsusDownLoadLicense.exe"
         , "$Env:SystemRoot\System32\AsusUpdateCheck.exe"
+        , "$Env:SystemRoot\System32\drivers\AsIO.sys"
         , "$Env:SystemRoot\System32\drivers\AsIO2.sys"
         , "$Env:SystemRoot\System32\drivers\AsIO3.sys"
         , "$Env:SystemRoot\System32\drivers\GLCKIO2.sys"
@@ -652,9 +653,9 @@ function Clear-AsusBloat {
             #Aura Sync uninstaller does not fully to remove lightning service sometimes
             $AuraServiceSetup = (Resolve-Path '..\Apps\AuraSync\*\LightingService').Path
             if (-Not $SetupSettings.HasLiveDash) {
-                Start-Process "$AuraServiceSetup\LSInstall\AuraServiceSetup.exe" -ArgumentList '-x -s -norestart' -Wait
+                Start-Process "$AuraServiceSetup\LSInstall\AuraServiceSetup.exe" -ArgumentList '-x -s' -Wait
             } else {
-                Start-Process "$AuraServiceSetup\AuraServiceSetup.exe" -ArgumentList '-x -s -norestart' -Wait
+                Start-Process "$AuraServiceSetup\AuraServiceSetup.exe" -ArgumentList '-x -s' -Wait
             }
             Start-Sleep 1
         }
