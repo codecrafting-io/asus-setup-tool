@@ -4,12 +4,15 @@
 Import-Module .\functions.psm1
 
 <# ================================ MAIN SCRIPT ================================ #>
+
+<#
 if (-Not (Get-IsWindows11)) {
     Write-Warning 'Asus Setup Tool may not be compatible with Windows 11'
     if ((Read-HostColor 'Still proceed? [Y] Yes [N] No' Yellow) -eq 'N') {
         Exit
     }
 }
+#>
 Import-Config
 Write-HeaderTitle
 
