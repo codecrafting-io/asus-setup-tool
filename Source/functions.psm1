@@ -72,7 +72,7 @@ function Compare-SetupIntegrity {
     try {
         $IntegrityList = '
         {
-            "..\\Source\\settings.json": "2C1B1C913950089E230EEF1949800B21A311E8CD4F0178DD9145A1913B26BC2B",
+            "..\\Source\\settings.json": "43D5EDE378C9D02B2D15069AB2A03573F1586E36730D12DCE61A511D9603597B",
             "..\\Source\\lock.json": "09EBCE9ED1AE675ADFE9E18A2755BF83E08A78402BE5DBF9414FFEB687F56C62",
         ' + ((Get-Content -Raw '..\Source\lock.json' -ErrorAction Stop) -Replace "^{", "") | ConvertFrom-Json
     } catch {
@@ -140,7 +140,7 @@ function Write-HeaderTitle {
  / ___ |___/ / /_/ /___/ /   ___/ /  __/ /_/ /_/ / /_/ /    / / / /_/ / /_/ / /
 /_/  |_/____/\____//____/   /____/\___/\__/\__,_/ .___/    /_/  \____/\____/_/
                                                /_/
-    $AuthorEmoji author: CodeCrafting-io
+    $AuthorEmoji author: codecrafting-io
     $VersionEmoji version: v$($SetupSettings.Version)
     " -ForegroundColor Cyan
 }
@@ -460,56 +460,71 @@ function Get-ASUSSetup {
         [String][AllowEmptyString()] $LiveDashUrl
     )
 
-    $Global:SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncUrl' -Value $SetupSettings.AuraSyncUrlNew
-    $Global:SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncHash' -Value $SetupSettings.AuraSyncHashNew
-    $Global:SetupSettings | Add-Member -Type NoteProperty -Name 'HasLiveDash' -Value $False
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncUrl' -Value $SetupSettings.AuraSyncUrlNew
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncHash' -Value $SetupSettings.AuraSyncHashNew
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'HasLiveDash' -Value $False
 
     #This is first just to avoid possible user confusion
     #LIVEDASH
     if ($LiveDashUrl) {
-        $Global:SetupSettings.AuraSyncUrl = $SetupSettings.AuraSyncUrlOld
-        $Global:SetupSettings.AuraSyncHash = $SetupSettings.AuraSyncHashOld
-        $Global:SetupSettings.HasLiveDash = $True
+        $SetupSettings.AuraSyncUrl = $SetupSettings.AuraSyncUrlOld
+        $SetupSettings.HasLiveDash = $True
 
         if (-Not (Test-Path '..\Apps\LiveDash.zip')) {
-            Write-Host 'Downloading LiveDash...'
+            $LiveDashVersion = $SetupSettings.LiveDashUrl.Replace("$($SetupSettings.AsusBaseUrl)/LiveDash_", '').Replace('.zip', '')
+            Write-Host "Downloading LiveDash version $LiveDashVersion..."
             Invoke-WebRequest $LiveDashUrl -OutFile '..\Apps\LiveDash.zip'
         } else {
-            Write-Warning 'LiveDash already downloaded. Extracting...'
+            Write-Host 'LiveDash already downloaded'
         }
         if ((Get-FileHash '..\Apps\LiveDash.zip' -Algorithm SHA256).Hash -ne $SetupSettings.LiveDashHash)  {
             Remove-Item '..\Apps\LiveDash.zip' -Force -ErrorAction Stop
             throw 'Invalid LiveDash.zip file.'
         }
+        Write-Host 'Extracting...'
         Remove-Item '..\Apps\LiveDash\*' -Recurse -ErrorAction SilentlyContinue
         Expand-Archive '..\Apps\LiveDash.zip' -DestinationPath "..\Apps\LiveDash\" -Force -ErrorAction Stop
     }
 
     #AISUITE
     if (-Not (Test-Path '..\Apps\AiSuite3.zip')) {
-        Write-Host "Downloading AiSuite3 (installation is optional)..."
+        $AiSuite3Version = $SetupSettings.AiSuite3Url.Replace("$($SetupSettings.AsusBaseUrl)/SW_ASUS_AISuite3_PPSU_EZ_SZ_TSD_W11_64_V", '').Replace('.zip', '')
+        Write-Host "Downloading AiSuite3 version $AiSuite3Version (installation is optional)..."
         Invoke-WebRequest $SetupSettings.AiSuite3Url -OutFile '..\Apps\AiSuite3.zip'
     } else {
-        Write-Warning 'AiSuite3 already downloaded (installation is optional). Extracting...'
+        Write-Host 'AiSuite3 already downloaded (installation is optional)'
     }
     if ((Get-FileHash '..\Apps\AiSuite3.zip' -Algorithm SHA256).Hash -ne $SetupSettings.AiSuite3Hash)  {
         Remove-Item '..\Apps\AiSuite3.zip' -Force -ErrorAction Stop
         throw 'Invalid AiSuite3.zip file.'
     }
+    Write-Host 'Extracting...'
     Remove-Item '..\Apps\AiSuite3\*' -Recurse -ErrorAction SilentlyContinue
     Expand-Archive '..\Apps\AiSuite3.zip' -DestinationPath "..\Apps\AiSuite3\" -Force -ErrorAction Stop
 
     #AuraSync
+    $AuraSyncVersion = $SetupSettings.AuraSyncUrl.Replace("$($SetupSettings.AsusBaseUrl)/Lighting_Control_", '').Replace('.zip', '')
     if (-Not (Test-Path '..\Apps\AuraSync.zip')) {
-        Write-Host 'Downloading AuraSync...'
+        Write-Host "Downloading AuraSync version $AuraSyncVersion..."
         Invoke-WebRequest $SetupSettings.AuraSyncUrl -OutFile '..\Apps\AuraSync.zip'
     } else {
-        Write-Warning 'AuraSync already downloaded. Extracting...'
+        Write-Host 'AuraSync already downloaded'
     }
-    if ((Get-FileHash '..\Apps\AuraSync.zip' -Algorithm SHA256).Hash -ne $SetupSettings.AuraSyncHash)  {
+    $AuraSyncFileHash = (Get-FileHash '..\Apps\AuraSync.zip' -Algorithm SHA256).Hash
+    if (($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashOld) -and ($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashNew))  {
         Remove-Item '..\Apps\AuraSync.zip' -Force -ErrorAction Stop
         throw 'Invalid AuraSync.zip file.'
+    } elseif ($SetupSettings.HasLiveDash -and $AuraSyncFileHash -eq $SetupSettings.AuraSyncHashNew) {
+        #If you switch from new to old re-download is necessary
+        Write-Warning "Re-Downloading AuraSync version $AuraSyncVersion for switch to an installation with LiveDash..."
+        Invoke-WebRequest $SetupSettings.AuraSyncUrl -OutFile '..\Apps\AuraSync.zip'
+        $AuraSyncFileHash = (Get-FileHash '..\Apps\AuraSync.zip' -Algorithm SHA256).Hash
+        if ($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashOld)  {
+            Remove-Item '..\Apps\AuraSync.zip' -Force -ErrorAction Stop
+            throw 'Invalid AuraSync.zip file.'
+        }
     }
+    Write-Host 'Extracting...'
     Remove-Item '..\Apps\AuraSync\*' -Recurse -ErrorAction SilentlyContinue
     Expand-Archive '..\Apps\AuraSync.zip' -DestinationPath "..\Apps\AuraSync\" -Force -ErrorAction Stop
 
@@ -518,7 +533,7 @@ function Get-ASUSSetup {
         Write-Host 'Downloading Armoury Crate Uninstall Tool...'
         Invoke-WebRequest $SetupSettings.UninstallToolUrl -OutFile '..\Apps\UninstallTool.zip'
     } else {
-        Write-Warning 'Armoury Crate Uninstall Tool already downloaded. Extracting...'
+        Write-Host 'Armoury Crate Uninstall Tool already downloaded'
     }
     if ((Get-FileHash '..\Apps\UninstallTool.zip' -Algorithm SHA256).Hash -ne $SetupSettings.UninstallToolHash)  {
 
@@ -527,6 +542,7 @@ function Get-ASUSSetup {
             throw 'Invalid UninstallTool.zip file.'
         }
     }
+    Write-Host 'Extracting...'
     Remove-Item '..\Apps\UninstallTool\*' -Recurse -ErrorAction SilentlyContinue
     Expand-Archive '..\Apps\UninstallTool.zip' -DestinationPath '..\Apps\UninstallTool\' -Force -ErrorAction Stop
 }
@@ -834,7 +850,7 @@ function Show-AuraDropdown {
         ; 'AacMouseSetup.exe'='Mouse'
         ; 'AacNBDTSetup.exe-UpdateNBDTHal.exe'='Laptop (NBDT)'
         ; 'AacOddSetup.exe'='ODD Controller'
-        ; 'AacPatriotM2Setup.exe-AacPatriotSetup.exe-AacPatriotDRAMSetup.exe'='Patriot'
+        ; 'AacPatriotM2Setup.exe-AacPatriotDRAMSetup.exe'='Patriot'
         ; 'AacPhisonSetup.exe'='Phison'
         ; 'aacsetup_jmi_1.0.5.1.exe'='JMI'
         ; 'AacSetup_WD_Black_AN1500_v1.0.12.0.exe-AacSetup_WD_BLACK_D50_1.0.9.0.exe'='Western Digital'
@@ -923,7 +939,7 @@ function Set-AsusService {
         [double] $Wait = 10
     )
 
-    Write-Host 'Set ASUS basic services through AiSuite3 quick setup...'
+    Write-Host 'Set ASUS basic services and drivers through AiSuite3 quick setup...'
     $Start = Get-Date
     $Setup = Start-Process $AiSuite3Path -PassThru
 

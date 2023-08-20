@@ -25,10 +25,11 @@ try {
 
 
 
+
 Write-Host 'GET ASUS SETUP' -ForegroundColor Green
 $HasLiveDash = Read-Host 'Do you want LiveDash (controls OLED screen)? [Y] Yes [N] No'
 if ($HasLiveDash -eq 'Y') {
-    Write-Warning 'LiveDash requirements may not be compatible with products **AFTER 2020**'
+    Write-Warning 'LiveDash requires an older AuraSync which may not be compatible with products after 2020'
     $LiveDashUrl = $SetupSettings.LiveDashUrl
 } else {
     $LiveDashUrl = ''
@@ -37,12 +38,6 @@ if ($HasLiveDash -eq 'Y') {
 try {
     Get-ASUSSetup -LiveDashUrl $LiveDashUrl -ErrorAction Stop
 } catch {
-    try {
-        #If failed download is not trustable
-        Remove-Item '..\Apps' -Force -Recurse -ErrorAction Stop
-    } catch {
-        Resolve-Error $_.Exception 'Failed to remove "Apps"'
-    }
     Resolve-Error $_.Exception 'Failed to get AsusSetup. Try again'
 }
 
@@ -94,23 +89,21 @@ if ($SetupSettings.HasLiveDash) {
 
 
 
+
 Write-Host "`nCLEAR ASUS BLOATWARE" -ForegroundColor Green
 Clear-AsusBloat
 
 
 
+
 if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
-    Write-Host "`nSET ASUS SERVICE" -ForegroundColor Green
+    Write-Host "`nINSTALL ASUS SETUP" -ForegroundColor Green
     try {
         Set-AsusService (Resolve-Path '..\Apps\AiSuite3\Setup.exe').Path
     } catch {
         Resolve-Error $_.Exception
     }
     Start-Sleep 5
-
-
-
-    Write-Host "`nINSTALL ASUS SETUP" -ForegroundColor Green
     Write-Host 'Installing Aura Sync...'
     try {
         Start-Process "$AuraPath\Setup.exe" -ArgumentList '/s /norestart' -Wait
@@ -161,6 +154,7 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
     Write-Output 'Removing temp files...'
     Remove-FileFolder $Env:TEMP -ErrorAction SilentlyContinue
 }
+
 
 
 
