@@ -69,15 +69,16 @@ function Compare-SetupIntegrity {
     Param ()
 
     Write-Host 'Checking file integrity...'
-
     try {
-        $IntegrityList = Get-Content -Raw '..\Source\lock.json' | ConvertFrom-Json -ErrorAction Stop
+        $IntegrityList = '
+        {
+            "..\\Source\\settings.json": "2C1B1C913950089E230EEF1949800B21A311E8CD4F0178DD9145A1913B26BC2B",
+            "..\\Source\\lock.json": "09EBCE9ED1AE675ADFE9E18A2755BF83E08A78402BE5DBF9414FFEB687F56C62",
+        ' + ((Get-Content -Raw '..\Source\lock.json' -ErrorAction Stop) -Replace "^{", "") | ConvertFrom-Json
     } catch {
         Resolve-Error $_.Exception 'failed to check integrity'
     }
 
-    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\settings.json' -Value '411B3D1974A719BB61B9FBB9543BBA670EA2AD6098A9D648B10E81B2A095850E'
-    $IntegrityList | Add-Member -Type NoteProperty -Name '..\Source\lock.json' -Value '3E1F107A7A8416E16978C6D04613A5840B883BDC4FE4324C97EF2DDB8ACADF75'
     foreach ($File in $IntegrityList.PSObject.Properties) {
         try {
             if ((Get-FileHash $File.Name -Algorithm SHA256).Hash -ne $File.Value) {
@@ -106,7 +107,7 @@ function Compare-SetupIntegrity {
 #>
 function Import-Config {
     # Check Source integrity
-    #Compare-SetupIntegrity
+    Compare-SetupIntegrity
 
     try {
         $Settings = Get-Content -Raw '..\Source\settings.json' | ConvertFrom-Json -ErrorAction Stop
