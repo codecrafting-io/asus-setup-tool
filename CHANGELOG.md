@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.3.0
+
+- Improved POWERSHELL execution policy handling
+- Improved removal of ASUS services and drivers
+- Reduced setup size
+- Improved compatibility for LiveDash setup
+- Added LiveDash support for AuraSync 1.07.84
+- Added choice for AuraSync installation version
+- Improved file check integrity
+- Improved downloading of apps
+- Windows 10 support
+
 ## v0.2.2
 
 - Improved removal of ASUS services and drivers
