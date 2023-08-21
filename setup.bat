@@ -9,22 +9,13 @@ IF %ERRORLEVEL% NEQ 0 (
     PAUSE
 ) ELSE (
     IF "%POLICY%" == "Restricted" (
-        REM More conservative solution
-        REM POWERSHELL -Command "Write-Host 'POWERSHELL file script execution policy is disabled!' -ForegroundColor Yellow"
-        REM ECHO The following command was copied to the clipboard:
-        REM POWERSHELL -Command "Write-Host 'Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force;.\main.ps1' -ForegroundColor Cyan"
-        REM POWERSHELL -Command "Set-Clipboard 'Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force;.\main.ps1'"
-        REM ECHO Press "[ENTER]" to open POWERSHELL and paste the command ^(mouse right click^)
-        REM PAUSE >NUL
-        REM START POWERSHELL
-
         REM Bypass solution
         POWERSHELL -Command "Write-Host 'POWERSHELL file script execution policy is disabled!' -ForegroundColor Yellow"
         ECHO An POWERSHELL window will open with the following command:
-        POWERSHELL -Command "Write-Host 'Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process;.\main.ps1' -ForegroundColor Cyan"
+        POWERSHELL -Command "Write-Host 'Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process;.\main.ps1' -ForegroundColor Cyan"
         ECHO Press "[ENTER]" to open POWERSHELL
         PAUSE >NUL
-        START POWERSHELL -NoExit -Command "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process;.\main.ps1"
+        START POWERSHELL -NoExit -Command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process;.\main.ps1"
     ) else (
         CALL POWERSHELL -file main.ps1
         CD ..

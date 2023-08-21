@@ -415,6 +415,8 @@ function Remove-DriverService {
 
     #First stop
     Write-Information "Stopping $ObjectType '$Name'"
+    Stop-Service -Name $Name -Force -NoWait
+    Start-Sleep 3
     Stop-Service -Name $Name -Force
 
     Write-Information "Removing $ObjectType '$Name'"
@@ -463,11 +465,19 @@ function Get-ASUSSetup {
     $SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncUrl' -Value $SetupSettings.AuraSyncUrlNew
     $SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncHash' -Value $SetupSettings.AuraSyncHashNew
     $SetupSettings | Add-Member -Type NoteProperty -Name 'HasLiveDash' -Value $False
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'IsOldAura' -Value $False
+
+    Write-Host 'Choose the AuraSync version:'
+    Write-Host '  1 - NEW: Version 1.07.84_v2.2 has support for newer hardware, but is more bloated' -ForegroundColor Cyan
+    Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but has lower support for newer hardware' -ForegroundColor Blue
+    if ((Read-Host '[1] NEW [2] OLD') -eq '2') {
+        $SetupSettings.IsOldAura = $True
+        $SetupSettings.AuraSyncUrl = $SetupSettings.AuraSyncUrlOld
+    }
 
     #This is first just to avoid possible user confusion
     #LIVEDASH
     if ($LiveDashUrl) {
-        $SetupSettings.AuraSyncUrl = $SetupSettings.AuraSyncUrlOld
         $SetupSettings.HasLiveDash = $True
 
         if (-Not (Test-Path '..\Apps\LiveDash.zip')) {
@@ -514,12 +524,15 @@ function Get-ASUSSetup {
     if (($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashOld) -and ($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashNew))  {
         Remove-Item '..\Apps\AuraSync.zip' -Force -ErrorAction Stop
         throw 'Invalid AuraSync.zip file.'
-    } elseif ($SetupSettings.HasLiveDash -and $AuraSyncFileHash -eq $SetupSettings.AuraSyncHashNew) {
+    } elseif (
+        ($SetupSettings.IsOldAura -and $AuraSyncFileHash -eq $SetupSettings.AuraSyncHashNew) -or
+        (-Not $SetupSettings.IsOldAura -and $AuraSyncFileHash -eq $SetupSettings.AuraSyncHashOld)
+    ) {
         #If you switch from new to old re-download is necessary
-        Write-Warning "Re-Downloading AuraSync version $AuraSyncVersion for switch to an installation with LiveDash..."
+        Write-Warning "Switch to AuraSync version $AuraSyncVersion. Re-Downloading..."
         Invoke-WebRequest $SetupSettings.AuraSyncUrl -OutFile '..\Apps\AuraSync.zip'
         $AuraSyncFileHash = (Get-FileHash '..\Apps\AuraSync.zip' -Algorithm SHA256).Hash
-        if ($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashOld)  {
+        if (($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashOld) -and ($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashNew))  {
             Remove-Item '..\Apps\AuraSync.zip' -Force -ErrorAction Stop
             throw 'Invalid AuraSync.zip file.'
         }
@@ -600,8 +613,8 @@ function Clear-AsusBloat {
         , 'AsIO' #Driver
         , 'AsUpIO' #Driver
         , 'GLCKIO2' #Driver
-        , 'Asusgio2' #Driver
         , 'Asusgio3' #Driver
+        , 'Asusgio2' #Driver
     )
     $Files = @(
         "${Env:ProgramFiles(x86)}\ASUS"
@@ -632,6 +645,15 @@ function Clear-AsusBloat {
         , "${Env:ProgramData}\Package Cache\{5960FD0F-BB3B-49AF-B175-F77DC91E995A}v1.0.20"
     )
     $Registries = Get-Content '..\Source\registries.txt' | Where-Object { $_.Trim() -ne '' }
+
+    Write-Output 'Removing services and drivers...'
+    foreach ($Service in $Services) {
+        try {
+            Remove-DriverService -Name $Service -ErrorAction Stop
+        } catch {
+            Write-Debug $_.Exception
+        }
+    }
 
     Write-Output 'Uninstall apps (wait, this can take an while)...'
     try {
@@ -667,13 +689,13 @@ function Clear-AsusBloat {
             Start-Process "$AuraUninstaller\Setup.exe" -ArgumentList "-l0x9 -x -s -ARP -f1`"$AuraUninstaller\uninstall.iss`"" -Wait
             Start-Sleep 1
 
+            <#
             #Aura Sync uninstaller does not fully to remove lightning service sometimes
             $AuraServiceSetup = (Resolve-Path '..\Apps\AuraSync\*\LightingService').Path
-            if (-Not $SetupSettings.HasLiveDash) {
-                Start-Process "$AuraServiceSetup\LSInstall\AuraServiceSetup.exe" -ArgumentList '-x -s' -Wait
-            } else {
+            if ($SetupSettings.IsOldAura) {
                 Start-Process "$AuraServiceSetup\AuraServiceSetup.exe" -ArgumentList '-x -s' -Wait
             }
+            #>
             Start-Sleep 1
         }
         if (Test-Path $GlckIODriver) {
@@ -698,15 +720,6 @@ function Clear-AsusBloat {
         Start-Sleep 1
     } catch {
         Resolve-Error $_.Exception 'Uninstall tool failed'
-    }
-
-    Write-Output 'Removing services and drivers...'
-    foreach ($Service in $Services) {
-        try {
-            Remove-DriverService -Name $Service -ErrorAction Stop
-        } catch {
-            Write-Debug $_.Exception
-        }
     }
 
     Write-Output 'Removing tasks...'
@@ -859,7 +872,7 @@ function Show-AuraDropdown {
         ; 'AacVGASetup.exe'='VGA'
     }
 
-    if (-Not $SetupSettings.HasLiveDash) {
+    if (-Not $SetupSettings.IsOldAura) {
         #Does exist for the new Aura Sync
         $Options.Remove('AacCorsairSetup.exe')
         $Options.Remove('AacGalaxSetup.exe')
@@ -969,7 +982,7 @@ function Update-AsusService {
     #Asus LightingService is too sensitive and some times don't load profiles properly
     try {
         Start-Service -Name 'LightingService' -ErrorAction Stop
-        Start-SleepCountdown -Message 'Reset LightingService profiles: This will take:' -Seconds 90
+        Start-SleepCountdown -Message 'Reset LightingService profiles in:' -Seconds 90
         Stop-Service -Name 'LightingService' -Force -ErrorAction Stop
     } catch {
         Resolve-Error $_.Exception
@@ -1003,5 +1016,5 @@ function Update-AsusService {
     Start-Service -Name 'LightingService' -ErrorAction SilentlyContinue
 
     #Wait a bit for the LightingService set the profile. A all modules setup take an while
-    Start-SleepCountdown -Message 'Set new LightingService profiles: This will take:' -Seconds 90
+    Start-SleepCountdown -Message 'Set new LightingService profiles in:' -Seconds 90
 }

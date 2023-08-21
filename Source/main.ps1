@@ -27,9 +27,8 @@ try {
 
 
 Write-Host 'GET ASUS SETUP' -ForegroundColor Green
-$HasLiveDash = Read-Host 'Do you want LiveDash (controls OLED screen)? [Y] Yes [N] No'
-if ($HasLiveDash -eq 'Y') {
-    Write-Warning 'LiveDash requires an older AuraSync which may not be compatible with products after 2020'
+if ((Read-Host 'Do you want LiveDash (controls OLED screen)? [Y] Yes [N] No') -eq 'Y') {
+    Write-Warning 'LiveDash requires LightingService patching which may not be compatible with products after 2020'
     $LiveDashUrl = $SetupSettings.LiveDashUrl
 } else {
     $LiveDashUrl = ''
@@ -51,7 +50,7 @@ try {
 Write-Host 'Patching AuraSync setup...'
 try {
     $AuraPath = (Resolve-Path '..\Apps\AuraSync\*').Path
-    if ($SetupSettings.HasLiveDash) {
+    if ($SetupSettings.IsOldAura) {
         $AuraModulesPath = "$AuraPath\LightingService"
     } else {
         $AuraModulesPath = "$AuraPath\LightingService\LSInstall"
@@ -73,13 +72,6 @@ if ($SetupSettings.HasLiveDash) {
     try {
         $LiveDashPath = (Resolve-Path '..\Apps\LiveDash\*').Path
         Remove-Item "$LiveDashPath\LightingService" -Recurse -Force -ErrorAction Stop
-
-        <#
-        Remove-Item "$LiveDashPath\Io\*" -Exclude 'AsIoUnins.exe' -Recurse -Force -ErrorAction Stop
-        Copy-Item '..\Patches\AiSuite3\DrvResource\ASIO2\*' "$LiveDashPath\Io" -Recurse -Force -ErrorAction Stop
-        Rename-Item "$LiveDashPath\Io\InstDrv.exe" 'AsIoIns.exe' -Force -ErrorAction Stop
-        #>
-
         Copy-Item '..\Patches\AiSuite3\DrvResource\AXSP\*' "$LiveDashPath\AXSP" -Recurse -Force -ErrorAction Stop
         Copy-Item "$AuraPath\LightingService" $LiveDashPath -Recurse -Force -ErrorAction Stop
     } catch {
@@ -125,6 +117,7 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
         Write-Host 'Patching LightingService...'
         try {
             Stop-Service -Name 'LightingService' -ErrorAction Stop
+            Start-Sleep 2
             Copy-Item '..\Patches\MBIsSupported.dll' "${Env:ProgramFiles(x86)}\LightingService\MBIsSupported.dll" -Force -ErrorAction Stop
             Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
         } catch {
