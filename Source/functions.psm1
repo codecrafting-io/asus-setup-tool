@@ -646,6 +646,34 @@ function Clear-AsusBloat {
     )
     $Registries = Get-Content '..\Source\registries.txt' | Where-Object { $_.Trim() -ne '' }
 
+    Write-Output 'Stopping apps...'
+    $Apps = $('AiSuite3', 'Aura', 'LiveDash', 'AsPowerBar', 'DipAwayMode', 'EzUpdt') -join '|'
+    try {
+        Get-Process | Where-Object { $_.ProcessName -Match $Apps } | Stop-Process -Force -ErrorAction Stop
+    } catch {
+        Resolve-Error $_.Exception 'Failed to stop apps'
+    }
+
+    #The uninstallation of AiSuite3 only works before removal of services and drivers
+    if (Test-Path $AiSuite3Path) {
+        Write-Host 'Uninstalling AiSuite 3 (wait, this can take an while)...'
+        try {
+            Start-Process "${Env:ProgramData}\ASUS\AI Suite III\Setup.exe" -ArgumentList '-u -s' -Wait
+
+            #AI Suite III may leave a Ryzen Master Kernel Driver inside ASUS folder. Check if even if AiSuite 3 is not installed
+            $RyzenMasterDrv = Get-CimInstance -Class Win32_SystemDriver | Where-Object { $_.PathName -Like '*AI Suite III*' }
+            if ($RyzenMasterDrv) {
+                Write-Host 'Removing AI Suite III Ryzen Master driver...'
+                $RyzenMasterDrv | Stop-Service -Force -ErrorAction Stop
+                $RyzenMasterDrv | Remove-CimInstance -ErrorAction Stop
+            }
+        } catch {
+            Write-Debug $_.Exception 'Failed to uninstall AiSuite3'
+        }
+        Start-Sleep 1
+    }
+
+    #For the rest of applications it's better to remove the services first
     Write-Output 'Removing services and drivers (wait, this can take an while)...'
     foreach ($Service in $Services) {
         try {
@@ -655,22 +683,7 @@ function Clear-AsusBloat {
         }
     }
 
-    Write-Output 'Uninstall apps (wait, this can take an while)...'
     try {
-        if (Test-Path $AiSuite3Path) {
-            Write-Host 'Uninstalling AiSuite 3...'
-            Start-Process "${Env:ProgramData}\ASUS\AI Suite III\Setup.exe" -ArgumentList '-u -s' -Wait
-            Start-Sleep 1
-        }
-
-        #AI Suite III may leave a Ryzen Master Kernel Driver inside ASUS folder. Check if even if AiSuite 3 is not installed
-        $RyzenMasterDrv = Get-CimInstance -Class Win32_SystemDriver | Where-Object { $_.PathName -Like '*AI Suite III*' }
-        if ($RyzenMasterDrv) {
-            Write-Host 'Removing AI Suite III Ryzen Master driver...'
-            $RyzenMasterDrv | Stop-Service -Force
-            $RyzenMasterDrv | Remove-CimInstance
-        }
-
         if (Test-Path $LiveDashUninstaller) {
             Write-Host 'Uninstalling LiveDash...'
 
@@ -977,44 +990,59 @@ function Set-AsusService {
     If a local LastProfile exists will update the profile and set the services to manual startup and disable all ASUS Tasks
 #>
 function Update-AsusService {
-    Write-Host 'Setting profiles for LightingService (wait, this will take an while)...'
 
-    #Asus LightingService is too sensitive and some times don't load profiles properly
+
+    #Bring some sense to this madness
+    Write-Host 'Updating services dependencies...'
     try {
-        Start-Service -Name 'LightingService' -ErrorAction Stop
-        Start-SleepCountdown -Message 'Reset LightingService profiles in:' -Seconds 90
+        Stop-Service -Name 'LightingService' -Force -NoWait -ErrorAction Stop
+        Start-Sleep 5
         Stop-Service -Name 'LightingService' -Force -ErrorAction Stop
-    } catch {
-        Resolve-Error $_.Exception
-    }
-
-    #To only leave ASUS services and processes running when necessary
-    if ((Read-Host 'Set services to manual startup and disable tasks? [Y] Yes [N] No') -eq 'Y') {
-        Write-Host 'Setting services to manual startup...'
-        Set-Service -Name 'LightingService' -StartupType Manual -ErrorAction SilentlyContinue
-        Set-Service -Name 'asHmComSvc' -StartupType Manual -ErrorAction SilentlyContinue
-        Set-Service -Name 'asComSvc' -StartupType Manual -ErrorAction SilentlyContinue
-        Set-Service -Name 'AsusCertService' -StartupType Manual -ErrorAction SilentlyContinue
-
-        #Bring some sense to this madness
-        Write-Host 'Updating services dependencies...'
         Invoke-Expression 'sc.exe config asComSvc depend= RPCSS/AsusCertService' | Out-Null
         if ($SetupSettings.HasLiveDash) {
             Invoke-Expression 'sc.exe config asHmComSvc depend= RPCSS/asComSvc' | Out-Null
             Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asHmComSvc' | Out-Null
+
+            Write-Host 'Patching LightingService...'
+            Copy-Item '..\Patches\MBIsSupported.dll' "${Env:ProgramFiles(x86)}\LightingService\MBIsSupported.dll" -Force -ErrorAction Stop
         } else {
             Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asComSvc' | Out-Null
         }
-
-        #Mostly to disable ASUS Update tasks
-        Write-Host 'Disabling ASUS tasks...'
-        Get-ScheduledTask -TaskPath '\Asus\*' | Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
+    } catch {
+        Resolve-Error $_.Exception
     }
 
-    Copy-Item '..\Patches\Profiles\LastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
-    Copy-Item '..\Patches\Profiles\OledLastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\OledLastProfile.xml" -Force -ErrorAction SilentlyContinue
-    Start-Service -Name 'LightingService' -ErrorAction SilentlyContinue
+    if (Test-Path '..\Patches\Profiles\LastProfile.xml') {
+        Write-Host 'Setting profiles for LightingService (wait, this will take an while)...'
 
-    #Wait a bit for the LightingService set the profile. A all modules setup take an while
-    Start-SleepCountdown -Message 'Set new LightingService profiles in:' -Seconds 90
+        #Asus LightingService is too sensitive and some times don't load profiles properly
+        try {
+            Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction Stop
+            Start-Service -Name 'LightingService' -ErrorAction Stop
+            Start-SleepCountdown -Message 'Reset LightingService profiles in:' -Seconds 90
+            Stop-Service -Name 'LightingService' -Force -ErrorAction Stop
+        } catch {
+            Resolve-Error $_.Exception
+        }
+
+        #To only leave ASUS services and processes running when necessary
+        if ((Read-Host 'Set services to manual startup and disable tasks? [Y] Yes [N] No') -eq 'Y') {
+            Write-Host 'Setting services to manual startup...'
+            Set-Service -Name 'LightingService' -StartupType Manual -ErrorAction SilentlyContinue
+            Set-Service -Name 'asHmComSvc' -StartupType Manual -ErrorAction SilentlyContinue
+            Set-Service -Name 'asComSvc' -StartupType Manual -ErrorAction SilentlyContinue
+            Set-Service -Name 'AsusCertService' -StartupType Manual -ErrorAction SilentlyContinue
+
+            #Mostly to disable ASUS Update tasks
+            Write-Host 'Disabling ASUS tasks...'
+            Get-ScheduledTask -TaskPath '\Asus\*' | Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
+        }
+
+        Copy-Item '..\Patches\Profiles\LastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
+        Copy-Item '..\Patches\Profiles\OledLastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\OledLastProfile.xml" -Force -ErrorAction SilentlyContinue
+        Start-Service -Name 'LightingService' -ErrorAction SilentlyContinue
+
+        #Wait a bit for the LightingService set the profile. A all modules setup take an while
+        Start-SleepCountdown -Message 'Set new LightingService profiles in:' -Seconds 90
+    }
 }

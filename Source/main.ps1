@@ -115,22 +115,8 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
             } catch {
                 Resolve-Error $_.Exception
             }
-
-            Write-Host 'Patching LightingService...'
-            try {
-                Stop-Service -Name 'LightingService' -ErrorAction Stop
-                Start-Sleep 2
-                Copy-Item '..\Patches\MBIsSupported.dll' "${Env:ProgramFiles(x86)}\LightingService\MBIsSupported.dll" -Force -ErrorAction Stop
-                Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
-            } catch {
-                Resolve-Error $_.Exception
-            }
         }
-
-        #Set local profiles if exist
-        if (Test-Path '..\Patches\Profiles\LastProfile.xml') {
-            Update-AsusService
-        }
+        Update-AsusService
     }
 
     if ((Read-Host 'Want to install AiSuite 3? [Y] Yes [N] No') -eq 'Y') {
@@ -157,5 +143,5 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
 $Emoji = Convert-UnicodeToEmoji '1F389'
 Write-Host "`n$Emoji ASUS SETUP TOOL FINISHED WITH SUCCESS! $Emoji" -ForegroundColor Green
 if ((Read-Host 'Reboot system now (recommended)? [Y] Yes [N] No') -eq 'Y') {
-    shutdown /r /t 5 /c "System will restart"
+    shutdown /r /t 5 /c "System will reboot"
 }

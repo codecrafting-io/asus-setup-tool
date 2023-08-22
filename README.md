@@ -28,7 +28,7 @@ This is an PowerShell script tool that manages the setup installation for the le
 
     ![ASUS Setup Tool first screen](/Source/Images/screen1.png?raw=true)
 
-  - In case you see an "PowerShell file script policy execution is disabled", type `[ENTER]` to open an new POWERSHELL window with the execution policy set to `Bypass` for the process scope, still allowing to execute the setup, like in the screen below:
+- In case you see an "PowerShell file script policy execution is disabled", type `[ENTER]` to open an new POWERSHELL window with the execution policy set to `Bypass` for the process scope, still allowing to execute the setup, like in the screen below:
 
     ![ASUS Setup Tool powershell execution policy](/Source/Images/screen2.png?raw=true)
 
@@ -39,7 +39,7 @@ This is an PowerShell script tool that manages the setup installation for the le
 
     ![ASUS Setup Tool AuraSync version](/Source/Images/screen3.png?raw=true)
 
-- The tools LiveDash (if you chose), AuraSync, AiSuite 3, Armoury Uninstall Tool will be downloaded. The AiSuite3 is downloaded for correctly setting some services, but installation is optional.
+- The apps LiveDash (if you chose), AuraSync, AiSuite 3, Armoury Uninstall Tool will be downloaded. The AiSuite3 is downloaded for correctly setting some services, but installation is optional.
 - After the download and patches applied, you should see an option to choose which AuraSync modules you want to add. Mark the checkboxes for the modules you want. AuraSync have a modular component design to control a variety of devices. By the default, the setup will install all modules even if you don't have the device. If you want a cleaner installation, you can check here which modules are relevant for your case. If you type `N` you should see the following screens:
 
     ![ASUS Setup Tool add modules](/Source/Images/screen4.png?raw=true)
@@ -50,7 +50,7 @@ This is an PowerShell script tool that manages the setup installation for the le
 
     ![ASUS Setup Tool installation step](/Source/Images/screen5.png?raw=true)
 
-- Choose if you want to install AuraSync. Use this if you only want to install AiSuite3.
+- Choose if you want to install AuraSync. In this step, the ASUS services are updated to configure a proper order of the dependency of each other, so they start properly. By typing `N` you can only install AiSuite3.
 - Choose if you want to install AiSuite3. Notice that if you had AiSuite3 installed prior to executing ASUS Setup Tool, a reboot is required. You can install manually later. In this case, you can find AiSuite3 inside `Apps` folder.
 - You can choose to reboot system now (recommended) or later
 
@@ -62,9 +62,11 @@ This is an PowerShell script tool that manages the setup installation for the le
 
     ![Yea Baby](https://www.memesmonkey.com/images/memesmonkey/ba/ba0418a6baea139993fc38eb95f5da04.jpeg)
 
-## Automatic set of profiles
+## Automatic set of profiles, and services tip
 
-If you create a folder "Profiles" inside "Patches" and put the files `LastProfile.xml` and `OledLastProfile.xml` from previous `LightingService` installations, the ASUS Setup Tool will set those profiles after the installation. Also, a new option will appear to set "Set services to manual startup and disable tasks". This will disable ASUS Tasks (mostly for ASUS Update), update the services `ASUS Com Service`, `ASUS HM Com Service` (LiveDash only), `AsusCertService` and `LightingService` to manual startup, and also update their dependencies to they start properly when launching the applications. Note, the apps may take a while to start using this.
+If you create a folder "Profiles" inside "Patches" and put the files `LastProfile.xml` and `OledLastProfile.xml` from previous `LightingService` installations, the ASUS Setup Tool will set those profiles after the installation. Also, a new option will appear to set "Set services to manual startup and disable tasks". This will disable ASUS Tasks (mostly for ASUS Update) and update the services `ASUS Com Service`, `ASUS HM Com Service` (LiveDash only), `AsusCertService` and `LightingService` to manual startup.
+
+The reason behind this is to leave a minimal or no extra processes running if they don't need to. It's not necessary to leave `LightingService`, `ASUS COM Service`, `ASUS Cert Service` running all the time to keep your RGB settings. So the automatic set of profiles already does that for you. If you don't have the profiles at hand before installation, you can [open the services](https://www.wikihow.com/Open-Windows-Services), go to properties of each service and set the initialization type for manual. Once you were set, for most RGB configurations, those services are only needed to run again if you want to change the lighting or after a power loss. Note that when services are set to manual, the applications will take longer to start.
 
 ## Known Issues
 
@@ -107,7 +109,7 @@ Knowing this, what is done here was:
 
 - Create a better consistent dependency services and assets, for ASIO, AXSP, using the latest files from Armoury Crate installation. You can find them on `Patches` folder
 - Proper setup of AXSP and AsusCertService before AuraSync/LiveDash installation. The easiest way found was just launching the AiSuite 3 setup. When launched, both services are installed, even if you don't do anything in the wizard setup. The ASUS Setup quickly launches the AiSuite 3 after being patched and as soon the wizard opens the services are installed and setup can be closed.
-- Patch LightingService to work with LiveDash. In case you install LiveDash, is necessary to replace the file `MBIsSupported.dll` for the LightingService present on version 1.07.60. Without that patching, it is very likely you see a message like `ASUS's device no found !!` or the App won't even open. After decompiling the application, it was noticed that was related to the LightingService and MBIsSupported.dll. This section inside `MainWindow.xaml.cs` is key for LiveDash function:
+- Patch LightingService to work with LiveDash. In case you install LiveDash, is necessary to replace the file `MBIsSupported.dll` for the LightingService present on AuraSync version 1.07.60. Without that patching, it is very likely you see a message like `ASUS's device no found !!` or the App won't even open. After decompiling the application, it was noticed that relation looking inside the section of `MainWindow.xaml.cs` function:
 
     ```c#
     private void GetCOMService()
@@ -134,15 +136,14 @@ Knowing this, what is done here was:
     ```
 
 - This will determine what kind of device you have installed, and despite AuraSync may work and detect the products, LiveDash won't. If the `Oled_GetCapability` returns an XML with `<AsusMB>0</AsusMB>` the LiveDash won't work or even open for motherboard products.
-- To "fix this" it is necessary to set the AXSP, ASIO2/ASIO3 first, update the MBIsSupported.dll, and an older ASIO have to be installed in SysWOW64 drivers, which can be done in the "Io" folder inside LiveDash setup. This Io folder contains ASIO2, but a different one, so not all of them are installed when ASIO2 already is, resulting in only installing ASIO inside SysWOW64.
-- To get the older AuraSync 1.07.60 was found in [this link](https://www.reddit.com/r/ASUS/comments/eh1ouk/asus_aura_archived_versions/).
+- To "fix this" it is necessary to set the AXSP, ASIO2/ASIO3 first, update the MBIsSupported.dll, and an older ASIO have to be installed in SysWOW64 drivers, which can be done by the files inside "Io" folder of LiveDash setup. This Io folder contains the ASIO2, but a different one, so not all of them are installed when ASIO2 already is, resulting in only installing ASIO inside SysWOW64.
+- The older AuraSync 1.07.60 was found in [this link](https://www.reddit.com/r/ASUS/comments/eh1ouk/asus_aura_archived_versions/).
 - I believe that replacing the MBIsSupported.dll may result in incompatibility with newer Motherboards released after 2020, but I can't test this.
+- Decompiling the `MBIsSupported.dll` is much more dificult since is C++ library, and I don't think is worth it to change the LiveDash app code, so for now it's the best solution found with the least alteration of the existing files.
 
 ## Final considerations
 
-I don't have a lot of experience with .NET or PowerShell projects, so feel free to help to improve this project and the setup process, especially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/48e16182a0a7121dca6cd943db57c25dbc4547d6626c505af692a2fb4dfef31f/relations) detections, all patches assets used are from the latest ArmouryCrate, and the older `AacMBSetup.exe` and `AuraServiceSetup` are necessary for LiveDash installtion in the current state of the tool, **so use this tool at your own risk**.
-
-It's not necessary to leave `LightingService`, `ASUS COM Service` running all the time to keep your RGB settings. Once you set, you can [open the services](https://www.wikihow.com/Open-Windows-Services) to open the properties of each service and set the initialization type for manual. You only need to reopen the AuraSync if a power loss happens.
+I don't have a lot of experience with .NET or PowerShell projects, so feel free to help to improve this project and the setup process, especially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/48e16182a0a7121dca6cd943db57c25dbc4547d6626c505af692a2fb4dfef31f/relations) detections, all patches assets used are from the latest ArmouryCrate, **so install them at your own risk**.
 
 This tool was making in the feeling of **REALLY NOT LIKING ARMOURY CRATE**. I hope this helps to finally bring some balance to the force 😁
 

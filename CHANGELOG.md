@@ -4,6 +4,7 @@
 
 - Improved POWERSHELL execution policy handling
 - Improved removal of ASUS services and drivers
+- Improved removal of apps
 - Reduced setup size
 - Improved compatibility for LiveDash setup
 - Added LiveDash support for AuraSync 1.07.84
