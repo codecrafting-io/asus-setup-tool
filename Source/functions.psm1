@@ -140,9 +140,9 @@ function Write-HeaderTitle {
  / ___ |___/ / /_/ /___/ /   ___/ /  __/ /_/ /_/ / /_/ /    / / / /_/ / /_/ / /
 /_/  |_/____/\____//____/   /____/\___/\__/\__,_/ .___/    /_/  \____/\____/_/
                                                /_/
-    $AuthorEmoji author: codecrafting-io
-    $VersionEmoji version: v$($SetupSettings.Version)
-    " -ForegroundColor Cyan
+  $AuthorEmoji author: codecrafting-io
+  $VersionEmoji version: v$($SetupSettings.Version)
+" -ForegroundColor Cyan
 }
 
 <#
@@ -416,7 +416,7 @@ function Remove-DriverService {
     #First stop
     Write-Information "Stopping $ObjectType '$Name'"
     Stop-Service -Name $Name -Force -NoWait
-    Start-Sleep 3
+    Start-Sleep 5
     Stop-Service -Name $Name -Force
 
     Write-Information "Removing $ObjectType '$Name'"
@@ -646,7 +646,7 @@ function Clear-AsusBloat {
     )
     $Registries = Get-Content '..\Source\registries.txt' | Where-Object { $_.Trim() -ne '' }
 
-    Write-Output 'Removing services and drivers...'
+    Write-Output 'Removing services and drivers (wait, this can take an while)...'
     foreach ($Service in $Services) {
         try {
             Remove-DriverService -Name $Service -ErrorAction Stop

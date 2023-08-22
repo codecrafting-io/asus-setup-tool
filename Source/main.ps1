@@ -96,38 +96,41 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
         Resolve-Error $_.Exception
     }
     Start-Sleep 5
-    Write-Host 'Installing Aura Sync...'
-    try {
-        Start-Process "$AuraPath\Setup.exe" -ArgumentList '/s /norestart' -Wait
-        if (-not (Test-Path "${Env:ProgramFiles(x86)}\LightingService")) {
-            throw 'Failed to install aura sync. Try again'
-        }
-        Start-Sleep 2
-    } catch {
-        Resolve-Error $_.Exception
-    }
-    if ($SetupSettings.HasLiveDash) {
-        Write-Host 'Installing LiveDash...'
-        try {
-            Start-Process "$LiveDashPath\Setup.exe" -ArgumentList '/s /norestart' -Wait -ErrorAction Stop
-        } catch {
-            Resolve-Error $_.Exception
-        }
 
-        Write-Host 'Patching LightingService...'
+    if ((Read-Host 'Want to install AuraSync? [Y] Yes [N] No') -eq 'Y') {
+        Write-Host 'Installing Aura Sync...'
         try {
-            Stop-Service -Name 'LightingService' -ErrorAction Stop
+            Start-Process "$AuraPath\Setup.exe" -ArgumentList '/s /norestart' -Wait
+            if (-not (Test-Path "${Env:ProgramFiles(x86)}\LightingService")) {
+                throw 'Failed to install aura sync. Try again'
+            }
             Start-Sleep 2
-            Copy-Item '..\Patches\MBIsSupported.dll' "${Env:ProgramFiles(x86)}\LightingService\MBIsSupported.dll" -Force -ErrorAction Stop
-            Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
         } catch {
             Resolve-Error $_.Exception
         }
-    }
+        if ($SetupSettings.HasLiveDash) {
+            Write-Host 'Installing LiveDash...'
+            try {
+                Start-Process "$LiveDashPath\Setup.exe" -ArgumentList '/s /norestart' -Wait -ErrorAction Stop
+            } catch {
+                Resolve-Error $_.Exception
+            }
 
-    #Set local profiles if exist
-    if (Test-Path '..\Patches\Profiles\LastProfile.xml') {
-        Update-AsusService
+            Write-Host 'Patching LightingService...'
+            try {
+                Stop-Service -Name 'LightingService' -ErrorAction Stop
+                Start-Sleep 2
+                Copy-Item '..\Patches\MBIsSupported.dll' "${Env:ProgramFiles(x86)}\LightingService\MBIsSupported.dll" -Force -ErrorAction Stop
+                Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
+            } catch {
+                Resolve-Error $_.Exception
+            }
+        }
+
+        #Set local profiles if exist
+        if (Test-Path '..\Patches\Profiles\LastProfile.xml') {
+            Update-AsusService
+        }
     }
 
     if ((Read-Host 'Want to install AiSuite 3? [Y] Yes [N] No') -eq 'Y') {
