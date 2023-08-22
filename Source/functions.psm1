@@ -468,8 +468,8 @@ function Get-ASUSSetup {
     $SetupSettings | Add-Member -Type NoteProperty -Name 'IsOldAura' -Value $False
 
     Write-Host 'Choose the AuraSync version:'
-    Write-Host '  1 - NEW: Version 1.07.84_v2.2 has support for newer hardware, but is more bloated' -ForegroundColor Cyan
-    Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but has lower support for newer hardware' -ForegroundColor Blue
+    Write-Host "  1 - NEW: Version 1.07.84_v2.2 has support for newer hardware, but it's more bloated" -ForegroundColor Yellow
+    Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but has lower support for newer hardware ' -ForegroundColor Yellow
     if ((Read-Host '[1] NEW [2] OLD') -eq '2') {
         $SetupSettings.IsOldAura = $True
         $SetupSettings.AuraSyncUrl = $SetupSettings.AuraSyncUrlOld
