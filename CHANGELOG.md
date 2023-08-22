@@ -10,6 +10,7 @@
 - Added choice for AuraSync installation version
 - Improved file check integrity
 - Improved downloading of apps
+- Added option to only install AiSuite3
 - Windows 10 support
 
 ## v0.2.2
