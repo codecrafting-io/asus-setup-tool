@@ -145,7 +145,7 @@ Knowing this, what is done here was:
 
 ## Final considerations
 
-I don't have a lot of experience with .NET or PowerShell projects, so help is welcome to this project, especially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/d1b764f83841e0a92a9433e0a29add20f87021f838fb3e768f0b53183cd8ecf9/relations) detections, all patches assets used are from the latest ArmouryCrate, **so install them at your own risk**.
+I don't have a lot of experience with .NET or PowerShell projects, so help is welcome to this project, especially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/e8015642a1696954add3c3f68c0a18a2ed865588d71a50c8f0a42c4eb538f264/relations) detections, all patches assets used are from the latest ArmouryCrate, **so install them at your own risk**.
 
 This tool was making in the feeling of **REALLY NOT LIKING ARMOURY CRATE**. I hope this helps to finally bring some balance to the force 😁
 
