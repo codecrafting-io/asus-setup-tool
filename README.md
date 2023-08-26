@@ -34,8 +34,8 @@ This is an PowerShell script tool that manages the setup installation for the le
 
 - Choose if you want to install LiveDash. **The installation of LiveDash requires patching LightingService, which may lead to incompatibility for products launched after 2020. This will also affect AuraSync installation.**
 - Choose which version of AuraSync you want, by typing `1` or `2`:
-  - 1 - NEW: Version **1.07.84_v2.2** if you want latest hardware support available, but this version has more bloated modules, which leads to more processes running on the system.
-  - 2 - OLD: Version **1.07.66** has a less bloated module installation, but with lower support for newer hardware.
+  - 1 - NEW: Version **1.07.84_v2.2** if you want the latest hardware support available, but this version has more bloated modules, which leads to more processes running on the system.
+  - 2 - OLD: Version **1.07.66** has a less bloated module installation, but may not have support for products launched after 2020.
 
     ![ASUS Setup Tool AuraSync version](/Source/Images/screen3.png?raw=true)
 

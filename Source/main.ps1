@@ -28,7 +28,7 @@ try {
 
 Write-Host 'GET ASUS SETUP' -ForegroundColor Green
 if ((Read-Host 'Do you want LiveDash (controls OLED screen)? [Y] Yes [N] No') -eq 'Y') {
-    Write-Warning 'LiveDash requires LightingService patching which may not be compatible with products after 2020'
+    Write-Warning 'LiveDash requires LightingService patching which may be incompatible with products after 2020'
     $LiveDashUrl = $SetupSettings.LiveDashUrl
 } else {
     $LiveDashUrl = ''
