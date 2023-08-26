@@ -2,7 +2,7 @@
 
 ## v0.3.1
 
-- Add POWERSHELL execution policy handling when it's managed by a system group policy.
+- Added POWERSHELL execution policy handling for when it's managed by a system group policy.
 - Added handling for POWERSHELL language restriction modes.
 - Reduced setup size
 
