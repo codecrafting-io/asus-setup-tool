@@ -72,7 +72,7 @@ function Compare-SetupIntegrity {
     try {
         $IntegrityList = '
         {
-            "..\\Source\\settings.json": "43D5EDE378C9D02B2D15069AB2A03573F1586E36730D12DCE61A511D9603597B",
+            "..\\Source\\settings.json": "3CA5C5A7AE54ABDF5DCF8B13D8D7BB5C47D70E217116282D8914579BD01CA18A",
             "..\\Source\\lock.json": "09EBCE9ED1AE675ADFE9E18A2755BF83E08A78402BE5DBF9414FFEB687F56C62",
         ' + ((Get-Content -Raw '..\Source\lock.json' -ErrorAction Stop) -Replace "^{", "") | ConvertFrom-Json
     } catch {
