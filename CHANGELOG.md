@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.2
+
+- Updated references for the new UninstallTool
+- Improved message for UninstallTool integrity check
+
 ## v0.3.1
 
 - Added POWERSHELL execution policy handling for when it's managed by a system group policy.

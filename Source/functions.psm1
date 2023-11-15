@@ -72,7 +72,7 @@ function Compare-SetupIntegrity {
     try {
         $IntegrityList = '
         {
-            "..\\Source\\settings.json": "3CA5C5A7AE54ABDF5DCF8B13D8D7BB5C47D70E217116282D8914579BD01CA18A",
+            "..\\Source\\settings.json": "4577BA87EAD2E78BA6032A6973E8834AEC513A3CEFA33E840D8F90BD7243B586",
             "..\\Source\\lock.json": "09EBCE9ED1AE675ADFE9E18A2755BF83E08A78402BE5DBF9414FFEB687F56C62",
         ' + ((Get-Content -Raw '..\Source\lock.json' -ErrorAction Stop) -Replace "^{", "") | ConvertFrom-Json
     } catch {
@@ -273,7 +273,7 @@ function Read-HostColor {
         [String] $ForegroundColor
     )
 
-    Write-Host $Message -ForegroundColor $ForegroundColor
+    Write-Host $Message -ForegroundColor $ForegroundColor -NoNewline
     Read-Host
 }
 
@@ -551,7 +551,7 @@ function Get-ASUSSetup {
     if ((Get-FileHash '..\Apps\UninstallTool.zip' -Algorithm SHA256).Hash -ne $SetupSettings.UninstallToolHash)  {
 
         #Download link does not point to a specific version. TODO: Look for alternative checks
-        if ((Read-HostColor 'UninstallTool integrity check failed. Tool could be updated. Do you wish to proceed?' Yellow) -eq 'N') {
+        if ((Read-HostColor 'UninstallTool integrity check failed. Tool could be updated. Do you wish to proceed? [Y] YES [N] NO: ' Yellow) -eq 'N') {
             throw 'Invalid UninstallTool.zip file.'
         }
     }

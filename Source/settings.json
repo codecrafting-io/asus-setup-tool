@@ -1,5 +1,5 @@
 {
-    "Version": "0.3.1",
+    "Version": "0.3.2",
     "AsusBaseUrl": "https://dlcdnets.asus.com/pub/ASUS/mb/14Utilities",
     "AuraSyncUrlNew": "https://dlcdnets.asus.com/pub/ASUS/mb/14Utilities/Lighting_Control_1.07.84_v2.zip",
     "AuraSyncUrlOld": "https://dlcdnets.asus.com/pub/ASUS/mb/14Utilities/Lighting_Control_1.07.66.zip",
@@ -10,7 +10,7 @@
     "AuraSyncHashOld": "18E5C5E6F80F7CCFE8FA3ABEC7D8F51D2B9B7D3AA647353467DFE52AAC49F72E",
     "AiSuite3Hash": "EA873C6CC871195A952C5E5282B5C88FA0755D503AFCC20305E7BF8145745B74",
     "LiveDashHash": "7141460138C8C17E5CDB10935A0D51814E906BB847F3025C8B145272D881639B",
-    "UninstallToolHash": "61878E1447DAC2F9228C3BD5A7BE3A65246FC0230EFB86DEAEB40477CF56DCAC",
+    "UninstallToolHash": "958824B88FA709ECB674DA8B04F19A561302F5D9E0A6445D0EBB5E5F93932135",
     "AuraSyncGuid": "{5899CD4F-8764-4303-A0D9-C60A62CFC24F}",
     "LiveDashGuid": "{87861317-CC5D-4908-BFDC-639AFE9F3B4C}",
     "GlckIODriverGuid": "{3507c756-a80f-4b0e-8475-975d8b432176}"
