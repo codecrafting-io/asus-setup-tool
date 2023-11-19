@@ -9,7 +9,7 @@ This is an PowerShell script tool that manages the setup installation for the le
 
 - Download Aura Sync, LiveDash, AiSuite3 directly from ASUS site.
 - Proper uninstall all ASUS products and pieces of software, including Armoury Crate.
-- Patch ASUS setup files for a correct installation, resolving errors like `AsIO no found`, `AsIO access denied`
+- Patch ASUS setup files for a correct installation, mostly resolving `AsIO` errors.
 - Choose which modules from Aura Sync you want.
 - Install Aura Sync, LiveDash (optional), AiSuite 3 (optional).
 
