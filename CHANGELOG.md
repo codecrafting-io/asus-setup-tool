@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.4.0
+
+- Improved removal of files
+- Migrated internal settings to lock file
+
 ## v0.3.2
 
 - Updated references for the new UninstallTool
