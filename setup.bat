@@ -24,10 +24,10 @@ IF %ERRORLEVEL% NEQ 0 (
                 POWERSHELL -Command "Write-Host 'Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process;.\main.ps1' -ForegroundColor Cyan"
                 ECHO Press "[ENTER]" to open POWERSHELL
                 PAUSE >NUL
-                START POWERSHELL -NoExit -Command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process;.\main.ps1"
+                POWERSHELL -NoExit -Command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process;.\main.ps1"
             )
         ) ELSE (
-            CALL POWERSHELL -file main.ps1
+            POWERSHELL -file main.ps1
         )
     ) ELSE (
         ECHO POWERSHELL is not in "FullLanguage" mode. Change it before proceed

@@ -19,7 +19,7 @@ try {
 
 
 Write-Host 'GET ASUS SETUP' -ForegroundColor Green
-if ((Read-Host 'Do you want LiveDash (controls OLED screen)? [Y] Yes [N] No') -eq 'Y') {
+if ((Read-Host 'Want LiveDash (controls OLED screen)? [Y] Yes [N] No') -eq 'Y') {
     Write-Warning 'LiveDash requires LightingService patching which may be incompatible with products after 2020'
     $LiveDashUrl = $SetupSettings.LiveDashUrl
 } else {
@@ -80,7 +80,7 @@ Clear-AsusBloat
 
 
 
-if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
+if ((Read-Host 'Install apps now? [Y] Yes [N] No') -eq 'Y') {
     Write-Host "`nINSTALL ASUS SETUP" -ForegroundColor Green
     try {
         Set-AsusService (Resolve-Path '..\Apps\AiSuite3\Setup.exe').Path
@@ -89,7 +89,7 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
     }
     Start-Sleep 5
 
-    if ((Read-Host 'Want to install AuraSync? [Y] Yes [N] No') -eq 'Y') {
+    if ((Read-Host 'Install AuraSync? [Y] Yes [N] No') -eq 'Y') {
         Write-Host 'Installing Aura Sync...'
         try {
             Start-Process "$AuraPath\Setup.exe" -ArgumentList '/s /norestart' -Wait
@@ -111,7 +111,7 @@ if ((Read-Host 'Want to install apps now? [Y] Yes [N] No') -eq 'Y') {
         Update-AsusService
     }
 
-    if ((Read-Host 'Want to install AiSuite 3? [Y] Yes [N] No') -eq 'Y') {
+    if ((Read-Host 'Install AiSuite 3? [Y] Yes [N] No') -eq 'Y') {
         if ($HasAiSuite) {
             Write-Warning 'Reboot is required after AiSuite3 uninstallation. Install manually later on folder "Apps\AiSuite3"'
         } else {

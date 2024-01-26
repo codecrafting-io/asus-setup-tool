@@ -18,7 +18,7 @@ This is an PowerShell script tool that manages the setup installation for the le
 **NOTE: Before you proceed, note that this tool is experimental, still in early stages, provided as is and may not work or require manual tweaking.**
 
 - Create a System Restore point (recommended), [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
-- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.3.2.zip).
+- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.4.0.zip).
 - Extract the zip contents to a folder.
 - The [Windows core insolation](https://www.makeuseof.com/core-isolation-memory-integrity-windows/#:~:text=On%20the%20left%20side%20menu%20of%20the%20Windows%20Security%20app,the%20changes%20to%20take%20effect.) can interfere with the operation of ASUS Kernel drivers, so you may have to disable it.
 - If you have a third party antivirus, you **may have to add the setup to exclusions, disable or even uninstall it**, specially if it is a Kaspersky product. After this reboot the system and then proceed. You can re-enable/re-install the antivirus later.
@@ -87,6 +87,7 @@ Some of known issues:
 - The `SET ASUS SERVICE` fails: Reboot the system and try again. You may have to disable or uninstall the antivirus or Windows core isolation.
 - The POWERSHELL file script execution are managed by a group policy. When the execution policy of POWERSHELL file scripts are managed by a system group policy (User or Machine), you have to change to at least `RemoteSigned (allow local and remote)` before proceed. Check more with [this link](https://www.youtube.com/watch?v=zW69MisrsWk) to see more.
 - POWERSHELL is not in "FullLanguage" mode. When POWERSHELL is not set to "FullLanguage" mode, it is not possible to run the setup properly. To see more, check [this link](https://youtu.be/zW69MisrsWk?si=xLg4FjN4tbdveeP7&t=142).
+- Failed to remove file. Restart the pc and try again. Sometimes files fail to remove, so restart the PC and try again
 
 If you still have errors using the tool, open a PowerShell as a Administrator, navigate to the directory where you extract the tool, type the command `$global:DebugPreference = 'Continue'` and then `.\Setup.bat` to run ASUS Setup Tool. Copy the text for a `.txt` file and open an issue.
 

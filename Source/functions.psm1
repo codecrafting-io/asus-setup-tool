@@ -59,6 +59,56 @@ function Convert-UnicodeToEmoji {
 
 <#
 .SYNOPSIS
+    Expand environment and execution context variables inside a string
+
+.PARAMETER Value
+    The value string to be expanded
+
+.EXAMPLE
+   Get-ExpandedStringVariables '%LOCALAPPDATA%\\$ContextVar'
+#>
+function Get-ExpandedStringVariables {
+
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [String][AllowEmptyString()] $Value
+    )
+
+    if ($Value) {
+        $Value = [System.Environment]::ExpandEnvironmentVariables($Value)
+        $Value = $ExecutionContext.InvokeCommand.ExpandString($Value)
+    }
+
+    return $Value
+}
+
+<#
+.SYNOPSIS
+    Get Json from a file
+
+.PARAMETER JsonFile
+    The Json file path
+
+.EXAMPLE
+   Get-Json 'myjson.json'
+
+.NOTES
+    This will use UTF-8 as default and remove comments
+#>
+function Get-Json {
+
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [String][ValidateNotNullOrEmpty()] $JsonFile
+    )
+
+    return (Get-Content -Raw $JsonFile) -replace '\/\*[\s\S]*?\*\/|([^:]|^)\/\/[^\n\r]*' | ConvertFrom-Json
+}
+
+<#
+.SYNOPSIS
     Check file Setup Integrity
 
 .EXAMPLE
@@ -69,17 +119,17 @@ function Compare-SetupIntegrity {
     Param ()
 
     Write-Host 'Checking file integrity...'
+
     try {
-        $IntegrityList = '
-        {
-            "..\\Source\\settings.json": "4577BA87EAD2E78BA6032A6973E8834AEC513A3CEFA33E840D8F90BD7243B586",
-            "..\\Source\\lock.json": "09EBCE9ED1AE675ADFE9E18A2755BF83E08A78402BE5DBF9414FFEB687F56C62",
-        ' + ((Get-Content -Raw '..\Source\lock.json' -ErrorAction Stop) -Replace "^{", "") | ConvertFrom-Json
+        $Global:LockSettings = Get-Json '..\Source\lock.jsonc' -ErrorAction Stop
     } catch {
-        Resolve-Error $_.Exception 'failed to check integrity'
+        Resolve-Error $_.Exception 'failed to load lock settings'
     }
 
-    foreach ($File in $IntegrityList.PSObject.Properties) {
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "2B14F4C632B02BBFB250F88176D1E821E8B8F75BDF0156FB45F76819668FBD97"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "3A5C0AB9947ED879041D829F70387CD7A3197E40DCD0F02421E5DFF084B64E2B"
+
+    foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
         try {
             if ((Get-FileHash $File.Name -Algorithm SHA256).Hash -ne $File.Value) {
                 throw "Invalid $((Get-Item $File.Name).Name). Setup may be corrupted"
@@ -110,7 +160,7 @@ function Import-Config {
     Compare-SetupIntegrity
 
     try {
-        $Settings = Get-Content -Raw '..\Source\settings.json' | ConvertFrom-Json -ErrorAction Stop
+        $Settings = Get-Json '..\Source\settings.json' -ErrorAction Stop
         Write-Information $Settings
     } catch {
         Resolve-Error $_.Exception 'failed to load configuration file'
@@ -192,20 +242,24 @@ function Remove-FileFolder {
         [bool] $RemoveContainer = $False
     )
 
-    $Files = Get-ChildItem $Path -Recurse
-    $LastException = $null
-    foreach ($File in $Files) {
-        try {
-            Remove-Item $File.FullName -Force -Recurse -ErrorAction Stop
-        } catch {
-            $LastException = $_.Exception
-        }
-    }
-    if ($RemoveContainer) {
+    if (Test-Path $Path -PathType Leaf) {
         Remove-Item -Path $Path -Force -Recurse
-    }
-    if ($LastException) {
-        throw $LastException
+    } else {
+        $Files = Get-ChildItem $Path -Recurse
+        $LastException = $null
+        foreach ($File in $Files) {
+            try {
+                Remove-Item $File.FullName -Force -Recurse -ErrorAction Stop
+            } catch {
+                $LastException = $_.Exception
+            }
+        }
+        if ($RemoveContainer) {
+            Remove-Item -Path $Path -Force -Recurse
+        }
+        if ($LastException) {
+            throw $LastException
+        }
     }
 }
 
@@ -468,7 +522,7 @@ function Get-ASUSSetup {
     $SetupSettings | Add-Member -Type NoteProperty -Name 'IsOldAura' -Value $False
 
     Write-Host 'Choose the AuraSync version:'
-    Write-Host "  1 - NEW: Version 1.07.84_v2.2 for the latest product support, but it is more bloated" -ForegroundColor Yellow
+    Write-Host "  1 - NEW: Version 1.07.84_v2 for the latest product support, but it is more bloated" -ForegroundColor Yellow
     Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020' -ForegroundColor Yellow
     if ((Read-Host '[1] NEW [2] OLD') -eq '2') {
         $SetupSettings.IsOldAura = $True
@@ -598,58 +652,10 @@ function Clear-AsusBloat {
     $AiSuite3Path = "${Env:ProgramFiles(x86)}\Asus\AI Suite III\AISuite3.exe"
     $GlckIODriver = "${Env:ProgramData}\Package Cache\$($SetupSettings.GlckIODriverGuid)\GlckIODrvSetup.exe"
 
-    $Services = @(
-        'asComSvc'
-        , 'aaHMSvc'
-        , 'asHmComSvc'
-        , 'AsusCertService'
-        , 'AsusFanControlService'
-        , 'AsusUpdateCheck'
-        , 'AsusROGLSLService'
-        , 'LightingService'
-        , 'GameSDK'
-        , 'GameSDK Service'
-        , 'AsSysCtrlService'
-        , 'AsIO' #Driver
-        , 'AsUpIO' #Driver
-        , 'GLCKIO2' #Driver
-        , 'Asusgio3' #Driver
-        , 'Asusgio2' #Driver
-    )
-    $Files = @(
-        "${Env:ProgramFiles(x86)}\ASUS"
-        , "${Env:ProgramFiles(x86)}\LightingService"
-        , "${Env:ProgramFiles(x86)}\ENE"
-        , "${Env:ProgramFiles(x86)}\ASUS"
-        , "${Env:ProgramFiles}\ASUS"
-        , "${Env:ProgramData}\ASUS"
-        , "$AuraUninstaller"
-        , "$LiveDashUninstaller"
-        , "${Env:ProgramFiles(x86)}\InstallShield Installation Information\{AF8D8D0D-1262-4368-895E-44DA5632CD7B}" #AiSuite3
-        , "${Env:ProgramFiles(x86)}\InstallShield Installation Information\{7B40EADF-CA1B-423A-A110-89DA90679788}" #AiSuite3
-        , "${Env:ProgramFiles(x86)}\InstallShield Installation Information\{C0FEE440-FA2F-4C0D-B64C-35F1D4B7A009}" #AiSuite3
-        , "$Env:SystemRoot\System32\AsIO2.dll"
-        , "$Env:SystemRoot\System32\AsIO3.dll"
-        , "$Env:SystemRoot\System32\AsusDownLoadLicense.exe"
-        , "$Env:SystemRoot\System32\AsusUpdateCheck.exe"
-        , "$Env:SystemRoot\System32\drivers\AsIO.sys"
-        , "$Env:SystemRoot\System32\drivers\AsIO2.sys"
-        , "$Env:SystemRoot\System32\drivers\AsIO3.sys"
-        , "$Env:SystemRoot\System32\drivers\GLCKIO2.sys"
-        , "$Env:SystemRoot\SysWOW64\AsIO.dll"
-        , "$Env:SystemRoot\SysWOW64\AsIO2.dll"
-        , "$Env:SystemRoot\SysWOW64\AsIO3.dll"
-        , "$Env:SystemRoot\SysWOW64\drivers\AsIO.sys"
-        , "$Env:SystemRoot\SysWOW64\drivers\AsUpIO.sys"
-        , "${Env:ProgramData}\Package Cache\{5960FD0F-BB3B-49AF-B175-F77DC91E995A}v1.0.10"
-        , "${Env:ProgramData}\Package Cache\{5960FD0F-BB3B-49AF-B175-F77DC91E995A}v1.0.20"
-    )
-    $Registries = Get-Content '..\Source\registries.txt' | Where-Object { $_.Trim() -ne '' }
-
     Write-Output 'Stopping apps...'
-    $Apps = $('AiSuite3', 'Aura', 'LiveDash', 'AsPowerBar', 'DipAwayMode', 'EzUpdt') -join '|'
+
     try {
-        Get-Process | Where-Object { $_.ProcessName -Match $Apps } | Stop-Process -Force -ErrorAction Stop
+        Get-Process | Where-Object { $_.ProcessName -Match ($LockSettings.Apps -join '|') } | Stop-Process -Force -ErrorAction Stop
     } catch {
         Resolve-Error $_.Exception 'Failed to stop apps'
     }
@@ -675,7 +681,7 @@ function Clear-AsusBloat {
 
     #For the rest of applications it's better to remove the services first
     Write-Output 'Removing services and drivers (wait, this can take an while)...'
-    foreach ($Service in $Services) {
+    foreach ($Service in $LockSettings.Services) {
         try {
             Remove-DriverService -Name $Service -ErrorAction Stop
         } catch {
@@ -700,15 +706,6 @@ function Clear-AsusBloat {
             Copy-Item '.\Setups\Setup.exe' "$AuraUninstaller\Setup.exe" -Force -ErrorAction Stop
             Copy-Item '..\Source\uninstall-aurasync.iss' "$AuraUninstaller\uninstall.iss" -Force -ErrorAction Stop
             Start-Process "$AuraUninstaller\Setup.exe" -ArgumentList "-l0x9 -x -s -ARP -f1`"$AuraUninstaller\uninstall.iss`"" -Wait
-            Start-Sleep 1
-
-            <#
-            #Aura Sync uninstaller does not fully to remove lightning service sometimes
-            $AuraServiceSetup = (Resolve-Path '..\Apps\AuraSync\*\LightingService').Path
-            if ($SetupSettings.IsOldAura) {
-                Start-Process "$AuraServiceSetup\AuraServiceSetup.exe" -ArgumentList '-x -s' -Wait
-            }
-            #>
             Start-Sleep 1
         }
         if (Test-Path $GlckIODriver) {
@@ -752,19 +749,24 @@ function Clear-AsusBloat {
     }
 
     Write-Output 'Removing remaining files...'
-    foreach ($File in $Files) {
+    foreach ($File in $LockSettings.Files) {
+        $File = Get-ExpandedStringVariables $File
         try {
             Write-Information "Removing '$File'"
 
             #Will delete folder but don't stop on first error
             Remove-FileFolder $File $True -ErrorAction Stop
         } catch {
+            # Check if files were removed, except drivers because they can get degraded
+            if (-Not $File.EndsWith('.sys') -And (Test-Path $File)) {
+                Resolve-Error "Failed to remove '$File'. Restart the PC and try again"
+            }
             Write-Debug $_.Exception
         }
     }
 
     Write-Output 'Removing registries...'
-    foreach ($Registry in $Registries) {
+    foreach ($Registry in $LockSettings.Registries) {
         try {
             $Registry = $Registry.Replace('<usersid>', $UserSID)
             $Registry = $Registry.Replace('<aurasyncguid>', $SetupSettings.AuraSyncGuid)
@@ -861,30 +863,7 @@ function Show-AuraDropdown {
     $GroupBox.Font = $LabelFont
     $Form.Controls.Add($GroupBox)
 
-    $Options = [ordered]@{
-        'AacAIOFanSetup.exe'='Asus AIO'
-        ; 'AacCorsairSetup.exe'='Corsair'
-        ; 'AacDisplaySetup.exe'='Display'
-        ; 'AacENEDramSetup.exe-AacHal_ENE_DRAM_RGB_6K7742.exe-AacSetup.exe-AacSetup_DramHAL.exe-AacUHDRAMSetup.exe'='RAM'
-        ; 'AacExtCardSetup.exe'='Extension Card'
-        ; 'AacGalaxSetup.exe'='Galax'
-        ; 'AacHeadSetSetup.exe'='Headset'
-        ; 'AacKbSetup.exe'='Desktop Keyboard'
-        ; 'AacKingstonSetup.exe'='Kingston'
-        ; 'AacMBSetup.exe'='Motherboard'
-        ; 'AacMousePadSetup.exe'='Mousepad'
-        ; 'AacMouseSetup.exe'='Mouse'
-        ; 'AacNBDTSetup.exe-UpdateNBDTHal.exe'='Laptop (NBDT)'
-        ; 'AacOddSetup.exe'='ODD Controller'
-        ; 'AacPatriotM2Setup.exe-AacPatriotDRAMSetup.exe'='Patriot'
-        ; 'AacPhisonSetup.exe'='Phison'
-        ; 'aacsetup_jmi_1.0.5.1.exe'='JMI'
-        ; 'AacSetup_WD_Black_AN1500_v1.0.12.0.exe-AacSetup_WD_BLACK_D50_1.0.9.0.exe'='Western Digital'
-        ; 'AacSetup_ENE_EHD_M2_HAL-AacSetup_ENE_EHD_M2_HAL.exe-AacSetup_ENE_ESD_ASM.exe'='SSD/HD'
-        ; 'AacTerminalHal.exe'='Aura Terminal'
-        ; 'AacVGASetup.exe'='VGA'
-    }
-
+    $Options = $LockSettings.AuraModules.PSObject.Properties
     if (-Not $SetupSettings.IsOldAura) {
         #Does exist for the new Aura Sync
         $Options.Remove('AacCorsairSetup.exe')
@@ -898,10 +877,10 @@ function Show-AuraDropdown {
     $Checkboxes = @()
     $Y = 20
 
-    foreach ($Key in $Options.Keys) {
+    foreach ($Option in $Options) {
         $Checkbox = New-Object System.Windows.Forms.CheckBox
-        $Checkbox.Name = $Key
-        $Checkbox.Text = $Options[$Key]
+        $Checkbox.Name = $Option.Name
+        $Checkbox.Text = $Option.Value
         $Checkbox.Location = New-Object System.Drawing.Size(10, $Y)
         $Checkbox.Size = New-Object System.Drawing.Size(($Form.Size.Width - 70), 20)
         $Checkbox.Font = $LabelFont
