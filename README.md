@@ -18,7 +18,7 @@ This is an PowerShell script tool that manages the setup installation for the le
 **NOTE: Before you proceed, note that this tool is experimental, still in early stages, provided as is and may not work or require manual tweaking.**
 
 - Create a System Restore point (recommended), [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
-- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.4.0.zip).
+- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.5.0.zip).
 - Extract the zip contents to a folder.
 - The [Windows core insolation](https://www.makeuseof.com/core-isolation-memory-integrity-windows/#:~:text=On%20the%20left%20side%20menu%20of%20the%20Windows%20Security%20app,the%20changes%20to%20take%20effect.) can interfere with the operation of ASUS Kernel drivers, so you may have to disable it.
 - If you have a third party antivirus, you **may have to add the setup to exclusions, disable or even uninstall it**, specially if it is a Kaspersky product. After this reboot the system and then proceed. You can re-enable/re-install the antivirus later.
@@ -28,14 +28,15 @@ This is an PowerShell script tool that manages the setup installation for the le
 
     ![ASUS Setup Tool first screen](/Source/Images/screen1.png?raw=true)
 
-- In case you see an "PowerShell file script policy execution is restricted", type `[ENTER]` to open an new POWERSHELL window with the execution policy set to `Bypass` for the process scope, still allowing to execute the setup, like in the screen below:
+- In case you see an "PowerShell file script policy execution is restricted", type `[ENTER]` to execute an POWERSHELL script to set to `Bypass` for the process scope, still allowing to execute the setup, like in the screen below:
 
     ![ASUS Setup Tool powershell execution policy](/Source/Images/screen2.png?raw=true)
 
-- Choose if you want to install LiveDash. **The installation of LiveDash requires patching LightingService, which may lead to incompatibility for products launched after 2020. This will also affect AuraSync installation.**
 - Choose which version of AuraSync you want, by typing `1` or `2`:
   - 1 - NEW: Version **1.07.84_v2** if you want the latest hardware support available, but this version has more bloated modules, which leads to more processes running on the system.
   - 2 - OLD: Version **1.07.66** has a less bloated module installation, but may not have support for products launched after 2020.
+
+- Choose if you want to install LiveDash. **The installation of LiveDash requires patching LightingService, which may lead to incompatibility for products launched after 2020. This will also affect AuraSync installation.**
 
     ![ASUS Setup Tool AuraSync version](/Source/Images/screen3.png?raw=true)
 
@@ -80,7 +81,7 @@ Some of known issues:
 
     ![ASUS Setup Tool LightingService uninstall](/Source/Images/screen8.png?raw=true)
 
-- Aura Sync failed to install: This usually happens due to failure of installation of `LightingService`. Reboot the system and run ASUS Setup Tool again.
+- LightingService failed to install: This usually happens due to failure of installation of `LightingService`. Reboot the system and run ASUS Setup Tool again or execute the steps above.
 - Waiting to service stop: Sometimes some services or running drivers don't have an easy stop during the uninstallation. Reboot the system and try again.
 - The InstallShield Engine could not be installed: This likely happens during the uninstallation of one of the Apps, as a result of setup interruption or failure to uninstall. Click ok and then proceed. This won't interfere on uninstallation.
 - The `GET ASUS SETUP` fails: This can happen if you interrupt the process and tried again later. Just run Asus Setup again.

@@ -126,7 +126,7 @@ function Compare-SetupIntegrity {
         Resolve-Error $_.Exception 'failed to load lock settings'
     }
 
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "2B14F4C632B02BBFB250F88176D1E821E8B8F75BDF0156FB45F76819668FBD97"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "D0C49411FC632E35DA0016359FBAC5786FBCC570749DD229FE2C0F73C6D6B24C"
     $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "3A5C0AB9947ED879041D829F70387CD7A3197E40DCD0F02421E5DFF084B64E2B"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
@@ -511,10 +511,6 @@ function Get-UserSID {
 function Get-ASUSSetup {
 
     [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory)]
-        [String][AllowEmptyString()] $LiveDashUrl
-    )
 
     $SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncUrl' -Value $SetupSettings.AuraSyncUrlNew
     $SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncHash' -Value $SetupSettings.AuraSyncHashNew
@@ -522,22 +518,22 @@ function Get-ASUSSetup {
     $SetupSettings | Add-Member -Type NoteProperty -Name 'IsOldAura' -Value $False
 
     Write-Host 'Choose the AuraSync version:'
-    Write-Host "  1 - NEW: Version 1.07.84_v2 for the latest product support, but it is more bloated" -ForegroundColor Yellow
-    Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020' -ForegroundColor Yellow
+    Write-Host "  1 - NEW: Version 1.07.84_v2 for the latest product support, but it is more bloated" -ForegroundColor Cyan
+    Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020' -ForegroundColor Cyan
     if ((Read-Host '[1] NEW [2] OLD') -eq '2') {
         $SetupSettings.IsOldAura = $True
         $SetupSettings.AuraSyncUrl = $SetupSettings.AuraSyncUrlOld
     }
 
-    #This is first just to avoid possible user confusion
-    #LIVEDASH
-    if ($LiveDashUrl) {
+    #Write-Warning breaks line using newline characters
+    Write-Host ''
+    Write-Warning 'LiveDash requires LightingService patching which may be incompatible with products after 2020'
+    if ((Read-Host 'Want LiveDash (controls OLED screen)? [Y] Yes [N] No') -eq 'Y') {
         $SetupSettings.HasLiveDash = $True
-
         if (-Not (Test-Path '..\Apps\LiveDash.zip')) {
             $LiveDashVersion = $SetupSettings.LiveDashUrl.Replace("$($SetupSettings.AsusBaseUrl)/LiveDash_", '').Replace('.zip', '')
             Write-Host "Downloading LiveDash version $LiveDashVersion..."
-            Invoke-WebRequest $LiveDashUrl -OutFile '..\Apps\LiveDash.zip'
+            Invoke-WebRequest $SetupSettings.LiveDashUrl -OutFile '..\Apps\LiveDash.zip'
         } else {
             Write-Host 'LiveDash already downloaded'
         }
@@ -748,7 +744,7 @@ function Clear-AsusBloat {
         Write-Debug $_.Exception
     }
 
-    Write-Output 'Removing remaining files...'
+    Write-Output 'Removing files...'
     foreach ($File in $LockSettings.Files) {
         $File = Get-ExpandedStringVariables $File
         try {
@@ -811,6 +807,10 @@ function Update-AuraModules {
     if ($SetupSettings.HasLiveDash -and -not ($Selected.Contains('AacMBSetup.exe') -or $Selected.Contains('AacDisplaySetup.exe') -or $Selected.Contains('AacAIOFanSetup.exe'))) {
         $Selected.Add('AacMBSetup.exe')
     }
+
+    Write-Host 'Modules to be installed: ' -NoNewline
+    Write-Host $Selected -ForegroundColor Yellow
+
     $NewModules = @()
     foreach ($Module in $Modules) {
         #Skip blank lines
@@ -830,6 +830,7 @@ function Update-AuraModules {
             }
         }
     }
+
     Out-File ($ModulesPath + '\HalVersion.txt') -InputObject $NewModules
 }
 
@@ -970,6 +971,9 @@ function Set-AsusService {
 #>
 function Update-AsusService {
 
+    if (-not (Test-Path "${Env:ProgramFiles(x86)}\LightingService")) {
+        throw 'Failed to install LightingService. Reboot and try again'
+    }
 
     #Bring some sense to this madness
     Write-Host 'Updating services dependencies...'
@@ -996,7 +1000,9 @@ function Update-AsusService {
 
         #Asus LightingService is too sensitive and some times don't load profiles properly
         try {
-            Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction Stop
+            if (Test-Path "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml") {
+                Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction Stop
+            }
             Start-Service -Name 'LightingService' -ErrorAction Stop
             Start-SleepCountdown -Message 'Reset LightingService profiles in:' -Seconds 90
             Stop-Service -Name 'LightingService' -Force -ErrorAction Stop

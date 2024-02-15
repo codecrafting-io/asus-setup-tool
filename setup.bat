@@ -20,9 +20,9 @@ IF %ERRORLEVEL% NEQ 0 (
                 PAUSE >NUL
             ) ELSE (
                 POWERSHELL -Command "Write-Host 'POWERSHELL file script execution policy is restricted!' -ForegroundColor Yellow"
-                ECHO An POWERSHELL window will open with the following command:
+                ECHO The following POWERSHELL command will be executed:
                 POWERSHELL -Command "Write-Host 'Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process;.\main.ps1' -ForegroundColor Cyan"
-                ECHO Press "[ENTER]" to open POWERSHELL
+                ECHO Press "[ENTER]" to execute
                 PAUSE >NUL
                 POWERSHELL -NoExit -Command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process;.\main.ps1"
             )

@@ -1,9 +1,16 @@
 #$global:DebugPreference = 'Continue'
 #Requires -RunAsAdministrator
 
+#Change PS UI language for consistent support while there is no internationalization support
+[System.Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
 Import-Module .\functions.psm1
 
-<# ================================ MAIN SCRIPT ================================ #>
+<# ======================================== MAIN SCRIPT ======================================== #>
+
+
+#********************************************
+# INITIALIZATION STEP
+#********************************************
 
 Import-Config
 Write-HeaderTitle
@@ -18,16 +25,13 @@ try {
 
 
 
-Write-Host 'GET ASUS SETUP' -ForegroundColor Green
-if ((Read-Host 'Want LiveDash (controls OLED screen)? [Y] Yes [N] No') -eq 'Y') {
-    Write-Warning 'LiveDash requires LightingService patching which may be incompatible with products after 2020'
-    $LiveDashUrl = $SetupSettings.LiveDashUrl
-} else {
-    $LiveDashUrl = ''
-}
+#********************************************
+# GET ASUS SETUP STEP
+#********************************************
 
+Write-Host 'GET ASUS SETUP' -ForegroundColor Green
 try {
-    Get-ASUSSetup -LiveDashUrl $LiveDashUrl -ErrorAction Stop
+    Get-ASUSSetup -ErrorAction Stop
 } catch {
     Resolve-Error $_.Exception 'Failed to get AsusSetup. Try again'
 }
@@ -74,11 +78,18 @@ if ($SetupSettings.HasLiveDash) {
 
 
 
+#********************************************
+# CLEAR ASUS BLOATWARE STEP
+#********************************************
 Write-Host "`nCLEAR ASUS BLOATWARE" -ForegroundColor Green
 Clear-AsusBloat
 
 
 
+
+#********************************************
+# INSTALL ASUS SETUP STEP
+#********************************************
 
 if ((Read-Host 'Install apps now? [Y] Yes [N] No') -eq 'Y') {
     Write-Host "`nINSTALL ASUS SETUP" -ForegroundColor Green
@@ -93,23 +104,23 @@ if ((Read-Host 'Install apps now? [Y] Yes [N] No') -eq 'Y') {
         Write-Host 'Installing Aura Sync...'
         try {
             Start-Process "$AuraPath\Setup.exe" -ArgumentList '/s /norestart' -Wait
-            if (-not (Test-Path "${Env:ProgramFiles(x86)}\LightingService")) {
-                throw 'Failed to install aura sync. Try again'
-            }
             Start-Sleep 2
         } catch {
             Resolve-Error $_.Exception
         }
-        if ($SetupSettings.HasLiveDash) {
-            Write-Host 'Installing LiveDash...'
-            try {
-                Start-Process "$LiveDashPath\Setup.exe" -ArgumentList '/s /norestart' -Wait -ErrorAction Stop
-            } catch {
-                Resolve-Error $_.Exception
-            }
-        }
-        Update-AsusService
     }
+
+    if ($SetupSettings.HasLiveDash) {
+        Write-Host 'Installing LiveDash...'
+        try {
+            Start-Process "$LiveDashPath\Setup.exe" -ArgumentList '/s /norestart' -Wait -ErrorAction Stop
+            Start-Sleep 2
+        } catch {
+            Resolve-Error $_.Exception
+        }
+    }
+
+    Update-AsusService
 
     if ((Read-Host 'Install AiSuite 3? [Y] Yes [N] No') -eq 'Y') {
         if ($HasAiSuite) {
@@ -131,6 +142,10 @@ if ((Read-Host 'Install apps now? [Y] Yes [N] No') -eq 'Y') {
 
 
 
+
+#********************************************
+# ASUS SETUP END
+#********************************************
 
 $Emoji = Convert-UnicodeToEmoji '1F389'
 Write-Host "`n$Emoji ASUS SETUP TOOL FINISHED WITH SUCCESS! $Emoji" -ForegroundColor Green

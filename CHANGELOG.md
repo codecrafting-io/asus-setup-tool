@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.5.0
+
+- Changed installation process to allow installation of LiveDash only
+- Show AuraSync version question first
+- Added LiveDash warning before answering the question
+- Improved update of services dependencies
+- Show selected AuraSync modules
+
 ## v0.4.0
 
 - Improved removal of files
