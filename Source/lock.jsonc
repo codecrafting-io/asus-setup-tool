@@ -252,6 +252,7 @@
         , "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Installer\\UserData\\S-1-5-18\\Products\\F0DF0695B3BBFA941B577FD79CE199A5"
         , "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{5960FD0F-BB3B-49AF-B175-F77DC91E995A}"
         , "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{605108C1-153E-43D8-8A67-7CE326B00ECA}"
+        , "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{CD36E28B-6023-469A-91E7-049A2874EC13}"
         , "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\<aurasyncguid>"
         , "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\<livedashguid>"
         , "HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\ASUS"

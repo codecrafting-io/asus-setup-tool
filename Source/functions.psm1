@@ -127,7 +127,7 @@ function Compare-SetupIntegrity {
     }
 
     $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "D0C49411FC632E35DA0016359FBAC5786FBCC570749DD229FE2C0F73C6D6B24C"
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "3A5C0AB9947ED879041D829F70387CD7A3197E40DCD0F02421E5DFF084B64E2B"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "5BB1FDAB22B316204CFF580BF4F14C5B1EBE6A928A898678209AABD66B8D21AB"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
         try {
@@ -482,6 +482,9 @@ function Remove-DriverService {
 
     #Recommended by Microsoft
     Invoke-Expression "sc.exe delete '$Name'" | Out-Null
+
+    #Sometimes helps
+    Stop-Process -Name $Service -Force -ErrorAction SilentlyContinue
 }
 
 <#
@@ -800,16 +803,22 @@ function Update-AuraModules {
     )
 
     $Modules = Get-Content '..\Source\HalVersion.txt'
-    $Selected = Show-AuraDropdown
+    $SelectedMap = Show-AuraDropdown
+
+    #All this just to show friendly names for the user
+    Write-Host 'Modules to be installed:' -NoNewline
+    $Selected = New-Object System.Collections.Generic.List[String]
+    foreach ($Key in $SelectedMap.Keys) {
+        Write-Host " '$($SelectedMap[$Key])'" -NoNewline -ForegroundColor Yellow
+        $Key.Split('-') | ForEach-Object { $Selected.Add($_) | Out-Null }
+    }
+    Write-Host ''
 
     # Mandatory modules
     $Selected.Add('AuraServiceSetup.exe')
     if ($SetupSettings.HasLiveDash -and -not ($Selected.Contains('AacMBSetup.exe') -or $Selected.Contains('AacDisplaySetup.exe') -or $Selected.Contains('AacAIOFanSetup.exe'))) {
         $Selected.Add('AacMBSetup.exe')
     }
-
-    Write-Host 'Modules to be installed: ' -NoNewline
-    Write-Host $Selected -ForegroundColor Yellow
 
     $NewModules = @()
     foreach ($Module in $Modules) {
@@ -904,14 +913,15 @@ function Show-AuraDropdown {
     $Form.Size = New-Object System.Drawing.Size(350, ($Y + 120))
     $Form.ShowDialog() | Out-Null
 
-    $Result = New-Object Collections.Generic.List[String]
+    #Just to show friendly names to the user!
+    $Result = [ordered]@{}
     foreach ($Checkbox in $Checkboxes) {
         if ($Checkbox.Checked) {
-            $Checkbox.Name.Split('-') | ForEach-Object { $Result.Add($_) | Out-Null }
+            $Result[$Checkbox.Name] = $Checkbox.Text
         }
     }
 
-    #Prevents pipe to cast ArrayList to Object
+    #Prevents pipe to cast HashTable to Object
     return ,$Result
 }
 
@@ -977,38 +987,30 @@ function Update-AsusService {
 
     #Bring some sense to this madness
     Write-Host 'Updating services dependencies...'
-    try {
-        Stop-Service -Name 'LightingService' -Force -NoWait -ErrorAction Stop
-        Start-Sleep 5
-        Stop-Service -Name 'LightingService' -Force -ErrorAction Stop
-        Invoke-Expression 'sc.exe config asComSvc depend= RPCSS/AsusCertService' | Out-Null
-        if ($SetupSettings.HasLiveDash) {
-            Invoke-Expression 'sc.exe config asHmComSvc depend= RPCSS/asComSvc' | Out-Null
-            Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asHmComSvc' | Out-Null
+    Stop-Service -Name 'LightingService' -Force -NoWait -ErrorAction Stop
+    Start-Sleep 5
+    Stop-Service -Name 'LightingService' -Force -ErrorAction Stop
+    Invoke-Expression 'sc.exe config asComSvc depend= RPCSS/AsusCertService' | Out-Null
+    if ($SetupSettings.HasLiveDash) {
+        Invoke-Expression 'sc.exe config asHmComSvc depend= RPCSS/asComSvc' | Out-Null
+        Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asHmComSvc' | Out-Null
 
-            Write-Host 'Patching LightingService...'
-            Copy-Item '..\Patches\MBIsSupported.dll' "${Env:ProgramFiles(x86)}\LightingService\MBIsSupported.dll" -Force -ErrorAction Stop
-        } else {
-            Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asComSvc' | Out-Null
-        }
-    } catch {
-        Resolve-Error $_.Exception
+        Write-Host 'Patching LightingService...'
+        Copy-Item '..\Patches\MBIsSupported.dll' "${Env:ProgramFiles(x86)}\LightingService\MBIsSupported.dll" -Force -ErrorAction Stop
+    } else {
+        Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asComSvc' | Out-Null
     }
 
     if (Test-Path '..\Patches\Profiles\LastProfile.xml') {
         Write-Host 'Setting profiles for LightingService (wait, this will take an while)...'
 
         #Asus LightingService is too sensitive and some times don't load profiles properly
-        try {
-            if (Test-Path "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml") {
-                Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction Stop
-            }
-            Start-Service -Name 'LightingService' -ErrorAction Stop
-            Start-SleepCountdown -Message 'Reset LightingService profiles in:' -Seconds 90
-            Stop-Service -Name 'LightingService' -Force -ErrorAction Stop
-        } catch {
-            Resolve-Error $_.Exception
+        if (Test-Path "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml") {
+            Remove-Item "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction Stop
         }
+        Start-Service -Name 'LightingService' -ErrorAction Stop
+        Start-SleepCountdown -Message 'Reset LightingService profiles in:' -Seconds 90
+        Stop-Service -Name 'LightingService' -Force -ErrorAction Stop
 
         #To only leave ASUS services and processes running when necessary
         if ((Read-Host 'Set services to manual startup and disable tasks? [Y] Yes [N] No') -eq 'Y') {

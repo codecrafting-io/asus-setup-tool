@@ -95,13 +95,16 @@ if ((Read-Host 'Install apps now? [Y] Yes [N] No') -eq 'Y') {
     Write-Host "`nINSTALL ASUS SETUP" -ForegroundColor Green
     try {
         Set-AsusService (Resolve-Path '..\Apps\AiSuite3\Setup.exe').Path
+        Start-Sleep 5
     } catch {
         Resolve-Error $_.Exception
     }
-    Start-Sleep 5
 
+    #Check if LightingService was properly installed when use Update-AsusService
+    $HasLightingService = $False
     if ((Read-Host 'Install AuraSync? [Y] Yes [N] No') -eq 'Y') {
         Write-Host 'Installing Aura Sync...'
+        $HasLightingService = $True
         try {
             Start-Process "$AuraPath\Setup.exe" -ArgumentList '/s /norestart' -Wait
             Start-Sleep 2
@@ -112,6 +115,7 @@ if ((Read-Host 'Install apps now? [Y] Yes [N] No') -eq 'Y') {
 
     if ($SetupSettings.HasLiveDash) {
         Write-Host 'Installing LiveDash...'
+        $HasLightingService = $True
         try {
             Start-Process "$LiveDashPath\Setup.exe" -ArgumentList '/s /norestart' -Wait -ErrorAction Stop
             Start-Sleep 2
@@ -120,7 +124,13 @@ if ((Read-Host 'Install apps now? [Y] Yes [N] No') -eq 'Y') {
         }
     }
 
-    Update-AsusService
+    if ($HasLightingService) {
+        try {
+            Update-AsusService $HasLightingService
+        } catch {
+            Resolve-Error $_.Exception
+        }
+    }
 
     if ((Read-Host 'Install AiSuite 3? [Y] Yes [N] No') -eq 'Y') {
         if ($HasAiSuite) {
