@@ -48,7 +48,7 @@ function Compare-SetupIntegrity {
         Resolve-Error $_.Exception 'failed to load lock settings'
     }
 
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "D0C49411FC632E35DA0016359FBAC5786FBCC570749DD229FE2C0F73C6D6B24C"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "6455F4221F4C6A18C2044389C02D16EBB1A2EF57D4B78355B91F5FA448AF5453"
     $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "D366168DF2BBBE44ED63F9BCA10EA91D5BCF96BA74A8067E90BA63F0F563C627"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
@@ -128,105 +128,68 @@ function Write-HeaderTitle {
     Get-ASUSSetup -LiveDashUrl 'LiveDashURL'
 #>
 function Get-ASUSSetup {
-
     [CmdletBinding()]
 
-    $SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncUrl' -Value $SetupSettings.AuraSyncUrlNew
-    $SetupSettings | Add-Member -Type NoteProperty -Name 'AuraSyncHash' -Value $SetupSettings.AuraSyncHashNew
     $SetupSettings | Add-Member -Type NoteProperty -Name 'HasLiveDash' -Value $False
-    $SetupSettings | Add-Member -Type NoteProperty -Name 'IsOldAura' -Value $False
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'IsOldAura' -Value $True
 
     Write-Host 'Choose the AuraSync version:'
     Write-Host "  1 - NEW: Version 1.07.84_v2 for the latest product support, but it is more bloated" -ForegroundColor Cyan
     Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020' -ForegroundColor Cyan
-    if ((Read-Host '[1] NEW [2] OLD') -eq '2') {
-        $SetupSettings.IsOldAura = $True
-        $SetupSettings.AuraSyncUrl = $SetupSettings.AuraSyncUrlOld
+    if ((Read-Host '[1] NEW [2] OLD') -eq '1') {
+        $SetupSettings.IsOldAura = $False
     }
 
-    #Write-Warning breaks line using newline characters
     Write-Host ''
     Write-Warning 'LiveDash requires LightingService patching which may be incompatible with products after 2020'
     if ((Read-Host 'Want LiveDash (controls OLED screen)? [Y] Yes [N] No') -eq 'Y') {
         $SetupSettings.HasLiveDash = $True
-        if (-Not (Test-Path '..\Apps\LiveDash.zip')) {
-            $LiveDashVersion = $SetupSettings.LiveDashUrl.Replace("$($SetupSettings.AsusBaseUrl)/LiveDash_", '').Replace('.zip', '')
-            Write-Host "Downloading LiveDash version $LiveDashVersion..."
-            Invoke-WebRequest $SetupSettings.LiveDashUrl -OutFile '..\Apps\LiveDash.zip'
+    }
+
+    foreach ($Setup in $SetupSettings.Setups) {
+        #Skip LiveDash
+        if (($Setup.Name -eq 'LiveDash') -and (-not $SetupSettings.HasLiveDash)) {
+            continue
+        }
+        $SetupFolder = "..\Apps\$($Setup.File)"
+        $SetupFile = "$SetupFolder.zip"
+
+        #Switch settings when using the old aura sync
+        if ($Setup.Name -eq 'Aura Sync' -and $SetupSettings.IsOldAura) {
+            $Setup.Url = $Setup.OldAuraUrl
+            $Setup.Version = $Setup.OldAuraVersion
+            $Setup.Hash = $Setup.OldAuraHash
+            $SetupFile = "$SetupFolder.old.zip"
+        }
+
+        #Construct final URL
+        $Setup.Url = "$($SetupSettings.AsusBaseUrl)/$($Setup.Url)"
+
+        #Download
+        if (-Not (Test-Path $SetupFile)) {
+            Write-Host "Downloading $($Setup.Name) version $($Setup.Version)..."
+            Invoke-WebRequest $Setup.Url -OutFile $SetupFile
         } else {
-            Write-Host 'LiveDash already downloaded'
+            Write-Host "$($Setup.Name) already downloaded"
         }
-        if ((Get-FileHash '..\Apps\LiveDash.zip' -Algorithm SHA256).Hash -ne $SetupSettings.LiveDashHash)  {
-            Remove-Item '..\Apps\LiveDash.zip' -Force -ErrorAction Stop
-            throw 'Invalid LiveDash.zip file.'
-        }
-        Write-Host 'Extracting...'
-        Remove-Item '..\Apps\LiveDash\*' -Recurse -ErrorAction SilentlyContinue
-        Expand-Archive '..\Apps\LiveDash.zip' -DestinationPath "..\Apps\LiveDash\" -Force -ErrorAction Stop
-    }
 
-    #AISUITE
-    if (-Not (Test-Path '..\Apps\AiSuite3.zip')) {
-        $AiSuite3Version = $SetupSettings.AiSuite3Url.Replace("$($SetupSettings.AsusBaseUrl)/SW_ASUS_AISuite3_PPSU_EZ_SZ_TSD_W11_64_V", '').Replace('.zip', '')
-        Write-Host "Downloading AiSuite3 version $AiSuite3Version (installation is optional)..."
-        Invoke-WebRequest $SetupSettings.AiSuite3Url -OutFile '..\Apps\AiSuite3.zip'
-    } else {
-        Write-Host 'AiSuite3 already downloaded (installation is optional)'
-    }
-    if ((Get-FileHash '..\Apps\AiSuite3.zip' -Algorithm SHA256).Hash -ne $SetupSettings.AiSuite3Hash)  {
-        Remove-Item '..\Apps\AiSuite3.zip' -Force -ErrorAction Stop
-        throw 'Invalid AiSuite3.zip file.'
-    }
-    Write-Host 'Extracting...'
-    Remove-Item '..\Apps\AiSuite3\*' -Recurse -ErrorAction SilentlyContinue
-    Expand-Archive '..\Apps\AiSuite3.zip' -DestinationPath "..\Apps\AiSuite3\" -Force -ErrorAction Stop
-
-    #AuraSync
-    $AuraSyncVersion = $SetupSettings.AuraSyncUrl.Replace("$($SetupSettings.AsusBaseUrl)/Lighting_Control_", '').Replace('.zip', '')
-    if (-Not (Test-Path '..\Apps\AuraSync.zip')) {
-        Write-Host "Downloading AuraSync version $AuraSyncVersion..."
-        Invoke-WebRequest $SetupSettings.AuraSyncUrl -OutFile '..\Apps\AuraSync.zip'
-    } else {
-        Write-Host 'AuraSync already downloaded'
-    }
-    $AuraSyncFileHash = (Get-FileHash '..\Apps\AuraSync.zip' -Algorithm SHA256).Hash
-    if (($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashOld) -and ($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashNew))  {
-        Remove-Item '..\Apps\AuraSync.zip' -Force -ErrorAction Stop
-        throw 'Invalid AuraSync.zip file.'
-    } elseif (
-        ($SetupSettings.IsOldAura -and $AuraSyncFileHash -eq $SetupSettings.AuraSyncHashNew) -or
-        (-Not $SetupSettings.IsOldAura -and $AuraSyncFileHash -eq $SetupSettings.AuraSyncHashOld)
-    ) {
-        #If you switch from new to old re-download is necessary
-        Write-Warning "Switch to AuraSync version $AuraSyncVersion. Re-Downloading..."
-        Invoke-WebRequest $SetupSettings.AuraSyncUrl -OutFile '..\Apps\AuraSync.zip'
-        $AuraSyncFileHash = (Get-FileHash '..\Apps\AuraSync.zip' -Algorithm SHA256).Hash
-        if (($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashOld) -and ($AuraSyncFileHash -ne $SetupSettings.AuraSyncHashNew))  {
-            Remove-Item '..\Apps\AuraSync.zip' -Force -ErrorAction Stop
-            throw 'Invalid AuraSync.zip file.'
+        #Check Hash
+        $FileHash = (Get-FileHash $SetupFile -Algorithm SHA256).Hash
+        if ($FileHash -eq $Setup.Hash) {
+            Write-Host 'Extracting...'
+            Remove-Item "$SetupFolder\*" -Recurse -ErrorAction SilentlyContinue
+            Expand-Archive $SetupFile -DestinationPath "$SetupFolder\" -Force -ErrorAction Stop
+        } else {
+            if (($Setup.File -eq 'UninstallTool') -and
+                (Read-HostColor 'UninstallTool integrity check failed. Tool could be updated. Wish to proceed? [Y] YES [N] NO: ' Yellow) -eq 'Y'
+            ) {
+                continue
+            } else {
+                Remove-Item $SetupFile -Force -ErrorAction Stop
+                throw "Invalid $($Setup.Name) file."
+            }
         }
     }
-    Write-Host 'Extracting...'
-    Remove-Item '..\Apps\AuraSync\*' -Recurse -ErrorAction SilentlyContinue
-    Expand-Archive '..\Apps\AuraSync.zip' -DestinationPath "..\Apps\AuraSync\" -Force -ErrorAction Stop
-
-    #Armoury Uninstall Tool
-    if (-Not (Test-Path '..\Apps\UninstallTool.zip')) {
-        Write-Host 'Downloading Armoury Crate Uninstall Tool...'
-        Invoke-WebRequest $SetupSettings.UninstallToolUrl -OutFile '..\Apps\UninstallTool.zip'
-    } else {
-        Write-Host 'Armoury Crate Uninstall Tool already downloaded'
-    }
-    if ((Get-FileHash '..\Apps\UninstallTool.zip' -Algorithm SHA256).Hash -ne $SetupSettings.UninstallToolHash)  {
-
-        #Download link does not point to a specific version. TODO: Look for alternative checks
-        if ((Read-HostColor 'UninstallTool integrity check failed. Tool could be updated. Do you wish to proceed? [Y] YES [N] NO: ' Yellow) -eq 'N') {
-            throw 'Invalid UninstallTool.zip file.'
-        }
-    }
-    Write-Host 'Extracting...'
-    Remove-Item '..\Apps\UninstallTool\*' -Recurse -ErrorAction SilentlyContinue
-    Expand-Archive '..\Apps\UninstallTool.zip' -DestinationPath '..\Apps\UninstallTool\' -Force -ErrorAction Stop
 }
 
 <#

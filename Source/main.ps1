@@ -127,7 +127,7 @@ if ((Read-Host 'Install apps now? [Y] Yes [N] No') -eq 'Y') {
 
     if ($HasLightingService) {
         try {
-            Update-AsusService $HasLightingService
+            Update-AsusService
         } catch {
             Resolve-Error $_.Exception
         }

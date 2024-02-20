@@ -2,11 +2,12 @@
 
 ## v0.5.0
 
-- Added LiveDash warning before answering the question
+- Added LiveDash warning before answering question
 - Changed installation process to allow installation of LiveDash only
-- Fixed error when only installing AiSuite3
+- Fixed error when installing AiSuite3 only
 - Improved removal of services and drivers
 - Improved update of services dependencies
+- Reworked internally GET ASUS SETUP step
 - Separated functions module in two: setup and utils
 - Show AuraSync version question first
 - Show selected AuraSync modules
