@@ -1,61 +1,4 @@
-<# ================================ FUNCTIONS ================================ #>
-
-<#
-.SYNOPSIS
-    Resolves error exit strategy
-
-.PARAMETER Exception
-    The Exception to be handle (mandatory)
-
-.PARAMETER Message
-    Optional exit message
-
-.EXAMPLE
-    Resolve-Error -Exception $_.Exception
-
-.EXAMPLE
-    Resolve-Error -Exception $_.Exception -Message 'Exit Message Here'
-#>
-function Resolve-Error {
-
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory)]
-        [Exception] $Exception,
-
-        [String] $Message
-    )
-
-    Write-Debug $Exception
-    Write-Host "`n$($Exception.Message)" -ForegroundColor Red
-    Write-Host "`n$Message" -ForegroundColor Red
-    Read-Host -Prompt 'Press [ENTER] to exit'
-
-    Exit
-}
-
-<#
-.SYNOPSIS
-    Converts unicode string to Int32 system emoji
-
-.PARAMETER Unicode
-The unicode string. Cannot be null or empty
-
-.OUTPUTS
-    The converted string emoji
-
-.EXAMPLE
-    Convert-UnicodeToEmoji -Unicode '1F389'
-#>
-function Convert-UnicodeToEmoji {
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $Unicode
-    )
-
-    return [System.Char]::ConvertFromUtf32([System.Convert]::toInt32($Unicode, 16))
-}
+<# ================================ SETUP FUNCTIONS ================================ #>
 
 <#
 .SYNOPSIS
@@ -66,6 +9,9 @@ function Convert-UnicodeToEmoji {
 
 .EXAMPLE
    Get-ExpandedStringVariables '%LOCALAPPDATA%\\$ContextVar'
+
+.NOTES
+    This function have to on the same module scope otherwise ExpandString won't work
 #>
 function Get-ExpandedStringVariables {
 
@@ -81,30 +27,6 @@ function Get-ExpandedStringVariables {
     }
 
     return $Value
-}
-
-<#
-.SYNOPSIS
-    Get Json from a file
-
-.PARAMETER JsonFile
-    The Json file path
-
-.EXAMPLE
-   Get-Json 'myjson.json'
-
-.NOTES
-    This will use UTF-8 as default and remove comments
-#>
-function Get-Json {
-
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory, ValueFromPipeline)]
-        [String][ValidateNotNullOrEmpty()] $JsonFile
-    )
-
-    return (Get-Content -Raw $JsonFile) -replace '\/\*[\s\S]*?\*\/|([^:]|^)\/\/[^\n\r]*' | ConvertFrom-Json
 }
 
 <#
@@ -127,7 +49,7 @@ function Compare-SetupIntegrity {
     }
 
     $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "D0C49411FC632E35DA0016359FBAC5786FBCC570749DD229FE2C0F73C6D6B24C"
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "5BB1FDAB22B316204CFF580BF4F14C5B1EBE6A928A898678209AABD66B8D21AB"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "D366168DF2BBBE44ED63F9BCA10EA91D5BCF96BA74A8067E90BA63F0F563C627"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
         try {
@@ -193,312 +115,6 @@ function Write-HeaderTitle {
   $AuthorEmoji author: codecrafting-io
   $VersionEmoji version: v$($SetupSettings.Version)
 " -ForegroundColor Cyan
-}
-
-<#
-.SYNOPSIS
-    Check whether current system is Windows 11 or not
-
-.OUTPUTS
-    Returns $True or $False if current system is Windows 11 or not
-
-.EXAMPLE
-    Get-IsWindows11
-#>
-function Get-IsWindows11 {
-    $BuildVersion = $([System.Environment]::OSVersion.Version.Build)
-    if ($BuildVersion -ge '22000') {
-        return $True
-    }
-
-    return $False
-}
-
-<#
-.SYNOPSIS
-    Remove Folder and its contents. If some file could not be deleted the script continues to next file
-
-.PARAMETER Path
-    The Path file string to be removed (mandatory)
-
-.PARAMETER RemoveContainer
-    Remove the folder container. This is $False by default
-
-.EXAMPLE
-    Remove-FileFolder -Path 'File Path'
-
-.EXAMPLE
-    Remove-FileFolder -Path 'File Path' -RemoveContainer $True
-
-.NOTES
-    Only the last error is thrown
-#>
-function Remove-FileFolder {
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $Path,
-
-        [bool] $RemoveContainer = $False
-    )
-
-    if (Test-Path $Path -PathType Leaf) {
-        Remove-Item -Path $Path -Force -Recurse
-    } else {
-        $Files = Get-ChildItem $Path -Recurse
-        $LastException = $null
-        foreach ($File in $Files) {
-            try {
-                Remove-Item $File.FullName -Force -Recurse -ErrorAction Stop
-            } catch {
-                $LastException = $_.Exception
-            }
-        }
-        if ($RemoveContainer) {
-            Remove-Item -Path $Path -Force -Recurse
-        }
-        if ($LastException) {
-            throw $LastException
-        }
-    }
-}
-
-<#
-.SYNOPSIS
-Start a sleep command with countdown
-
-.PARAMETER Message
-The message to be printed (mandatory)
-
-.PARAMETER Seconds
-The amout of time to sleep (mandatory)
-
-.EXAMPLE
-    Start-SleepCountdown -Message 'Message' -Seconds 10
-
-.EXAMPLE
-    Start-SleepCountdown -Message 'Message' -Seconds 10 -NoNewLine
-#>
-function Start-SleepCountdown {
-
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory)]
-        [String] $Message,
-
-        [Parameter(Mandatory)]
-        [int] $Seconds,
-
-        [Parameter()]
-        [switch] $NoNewLine = $False
-    )
-
-    $Digits = "$Seconds".Length
-    for ($Timer = $Seconds; $Timer -ge 0; $Timer--) {
-        Write-Host "`r$Message $("$Timer".PadLeft($Digits, '0'))`s" -NoNewLine -ForegroundColor Yellow
-        Start-Sleep 1
-    }
-    if (-Not $NoNewLine) {
-        Write-Host ' '
-    }
-}
-
-<#
-.SYNOPSIS
-    Prints a colored string to the console before a empty ReadHost
-
-.PARAMETER Message
-The message to be printed (mandatory)
-
-.PARAMETER ForegroundColor
-The color of the message (mandatory)
-
-.EXAMPLE
-    Read-HostColor -Message 'Message' -ForegroundColor Green
-#>
-function Read-HostColor {
-
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory)]
-        [String] $Message,
-
-        [Parameter(Mandatory)]
-        [String] $ForegroundColor
-    )
-
-    Write-Host $Message -ForegroundColor $ForegroundColor -NoNewline
-    Read-Host
-}
-
-<#
-.SYNOPSIS
-    Copy Item showing a progress. Returns true if successfull or throw an exception if failed
-
-.PARAMETER Source
-    The source path to be copied (Mandatory)
-
-.PARAMETER Target
-    The target path to be copied (Mandatory)
-
-.PARAMETER Message
-    The actitivy message (Mandatory)
-
-.PARAMETER ShowFileProgress
-    Shows amount of progress of files copied (optional). Default is $True
-
-.PARAMETER ShowFiles
-    Shows the files beign copied (optional). Default is $False
-
-.OUTPUTS
-    Returns a Object with the information about the copy if successfull or throw a exception if failed
-
-.EXAMPLE
-    Copy-ItemWithProgress -Source 'Source' -Target 'Target' -Message 'Message'
-
-.EXAMPLE
-    Copy-ItemWithProgress -Source 'Source' -Target 'Target' -Message 'Message' -ShowFileProgress $False -ShowFiles $True
-#>
-function Copy-ItemWithProgress
-{
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $Source,
-
-        [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $Target,
-
-        [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $Message,
-
-        [bool] $ShowFileProgress = $True,
-
-        [bool] $ShowFiles = $False
-    )
-
-    $startTime = Get-Date
-
-    if ($Source.Length -lt 2) {
-        Throw "source path '$Source' is invalid"
-    } elseif ($Source[$Source.Length - 1] -eq "\") {
-        $Source = $Source.Substring(0, $Source.Length - 1)
-    }
-
-    if ($Target.Length -lt 2) {
-        Throw "target path '$Target' is invalid"
-    } elseif ($Target[$Target.Length - 1] -eq "\") {
-        $Target = $Target.Substring(0, $Target.Length - 1)
-    }
-
-    $FileList = Get-ChildItem "$Source" -Recurse
-    $SourceFullpath = (Resolve-Path $Source).Path
-    $SourceBasepath = $SourceFullpath.Split("\")[-1]
-    $Total = $FileList.Count
-    $Position = 0
-
-    <#
-        Loop through files checking for optional parts. Not sure if there is a faster way
-    #>
-    foreach ($File in $FileList) {
-        $TargetFile = $Target + "\" + $SourceBasepath + "\" + $File.FullName.Replace($SourceFullpath + "\", "")
-
-        $Status = $null
-        if ($ShowFileProgress) {
-            $Status = "$($Position + 1)/$Total itens"
-        }
-
-        $CurrentOperation = $null
-        if ($ShowFiles) {
-            $CurrentOperation = $TargetFile
-        }
-
-        try {
-            #Copy-Item does not override folder itens, so they must me ignored when a targetFile folder already exists
-            if ((Test-Path -LiteralPath $File.FullName -PathType Leaf) -or -Not (Test-Path -LiteralPath $TargetFile)) {
-                Copy-Item -LiteralPath $File.FullName "$TargetFile" -Force -PassThru | Out-Null
-            }
-        } catch {
-            Write-Host "Failed to copy $TargetFile" -ForegroundColor Red
-            Throw $_.Exception
-        }
-
-        Write-Progress -Activity $Message -Status $Status -CurrentOperation $CurrentOperation -PercentComplete (++$Position / $Total * 100)
-    }
-
-    Write-Progress -Activity $Message -Completed
-
-    return [PSCustomObject]@{
-        StartTime   = $startTime
-        EndTime     = Get-Date
-        Source      = $sourceFullpath
-        Target      = $Target
-        Count       = $Total
-    }
-}
-
-<#
-.SYNOPSIS
-    Remove a system service or driver
-
-.PARAMETER Name
-    The name of the service or Driver
-
-.EXAMPLE
-    Remove-DriverService -Name 'Driver|Service name'
-
-.LINK
-    Links to further documentation.
-#>
-function Remove-DriverService {
-
-    [CmdletBinding()]
-    Param (
-        [Parameter(Mandatory)]
-        [String][ValidateNotNullOrEmpty()] $Name
-    )
-
-    $Object = Get-CimInstance -Class Win32_SystemDriver -Filter "Name='$Name'"
-    $ObjectType = 'service'
-    if ($Object) {
-        $ObjectType = 'driver'
-    }
-    if ($ObjectType -eq 'service') {
-        $Object = Get-CimInstance -Class Win32_Service -Filter "Name='$Name'"
-    }
-
-    #First stop
-    Write-Information "Stopping $ObjectType '$Name'"
-    Stop-Service -Name $Name -Force -NoWait
-    Start-Sleep 5
-    Stop-Service -Name $Name -Force
-
-    Write-Information "Removing $ObjectType '$Name'"
-    if (Get-Command 'Remove-Service' -ErrorAction SilentlyContinue) {
-        Remove-Service -Name $Name
-    } else {
-        $Object | Remove-CimInstance
-    }
-
-    #Recommended by Microsoft
-    Invoke-Expression "sc.exe delete '$Name'" | Out-Null
-
-    #Sometimes helps
-    Stop-Process -Name $Service -Force -ErrorAction SilentlyContinue
-}
-
-<#
-.SYNOPSIS
-    Get the current LocalUser SID
-
-.OUTPUTS
-    Returns the currentLocalUser SID
-
-.EXAMPLE
-    Get-UserSID
-#>
-function Get-UserSID {
-    return (Get-LocalUser -Name $Env:USERNAME).SID.Value
 }
 
 <#
@@ -693,7 +309,7 @@ function Clear-AsusBloat {
             Write-Host 'Uninstalling LiveDash...'
 
             #InstallShield Setup.exe is missing after silent install.
-            Copy-Item '.\Setups\Setup.exe' "$LiveDashUninstaller\Setup.exe" -Force -ErrorAction Stop
+            Copy-Item '.\Bin\Setup.exe' "$LiveDashUninstaller\Setup.exe" -Force -ErrorAction Stop
             Copy-Item '..\Source\uninstall-livedash.iss' "$LiveDashUninstaller\uninstall.iss" -Force -ErrorAction Stop
             Start-Process "$LiveDashUninstaller\Setup.exe" -ArgumentList "-l0x9 -x -s -ARP -f1`"$LiveDashUninstaller\uninstall.iss`"" -Wait
             Start-Sleep 1
@@ -702,7 +318,7 @@ function Clear-AsusBloat {
             Write-Host 'Uninstalling AuraSync...'
 
             #InstallShield Setup.exe is missing after silent install.
-            Copy-Item '.\Setups\Setup.exe' "$AuraUninstaller\Setup.exe" -Force -ErrorAction Stop
+            Copy-Item '.\Bin\Setup.exe' "$AuraUninstaller\Setup.exe" -Force -ErrorAction Stop
             Copy-Item '..\Source\uninstall-aurasync.iss' "$AuraUninstaller\uninstall.iss" -Force -ErrorAction Stop
             Start-Process "$AuraUninstaller\Setup.exe" -ArgumentList "-l0x9 -x -s -ARP -f1`"$AuraUninstaller\uninstall.iss`"" -Wait
             Start-Sleep 1
@@ -748,11 +364,11 @@ function Clear-AsusBloat {
     }
 
     Write-Output 'Removing files...'
+
     foreach ($File in $LockSettings.Files) {
         $File = Get-ExpandedStringVariables $File
+        Write-Information "Removing '$File'"
         try {
-            Write-Information "Removing '$File'"
-
             #Will delete folder but don't stop on first error
             Remove-FileFolder $File $True -ErrorAction Stop
         } catch {
@@ -766,19 +382,19 @@ function Clear-AsusBloat {
 
     Write-Output 'Removing registries...'
     foreach ($Registry in $LockSettings.Registries) {
+        Write-Information "Removing '$Registry'"
         try {
             $Registry = $Registry.Replace('<usersid>', $UserSID)
             $Registry = $Registry.Replace('<aurasyncguid>', $SetupSettings.AuraSyncGuid)
             $Registry = $Registry.Replace('<livedashguid>', $SetupSettings.LiveDashGuid)
 
-            Write-Information "Removing '$Registry'"
             Remove-Item "Registry::$Registry" -Recurse -Force -ErrorAction Stop
         } catch {
             Write-Debug $_.Exception
         }
     }
 
-    Start-Process '.\Setups\AuraCleaner.exe' -Wait | Out-Null
+    Start-Process '.\Bin\AuraCleaner.exe' -Wait | Out-Null
 }
 
 <#

@@ -3,7 +3,8 @@
 
 #Change PS UI language for consistent support while there is no internationalization support
 [System.Threading.Thread]::CurrentThread.CurrentUICulture = 'en-US'
-Import-Module .\functions.psm1
+Import-Module .\utils.psm1
+Import-Module .\setup.psm1
 
 <# ======================================== MAIN SCRIPT ======================================== #>
 

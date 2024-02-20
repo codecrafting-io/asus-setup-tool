@@ -7,6 +7,7 @@
 - Fixed error when only installing AiSuite3
 - Improved removal of services and drivers
 - Improved update of services dependencies
+- Separated functions module in two: setup and utils
 - Show AuraSync version question first
 - Show selected AuraSync modules
 

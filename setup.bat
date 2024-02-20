@@ -11,7 +11,8 @@ IF %ERRORLEVEL% NEQ 0 (
     IF "!LANGMODE!" == "FullLanguage" (
         FOR /F %%i IN ('POWERSHELL -Command "('RemoteSigned', 'Unrestricted').Contains((Get-ExecutionPolicy).ToString())"') DO (SET IS_UNRESTRICTED=%%i)
         POWERSHELL -Command "Unblock-File 'main.ps1'"
-        POWERSHELL -Command "Unblock-File 'functions.psm1'"
+        POWERSHELL -Command "Unblock-File 'setup.psm1'"
+        POWERSHELL -Command "Unblock-File 'utils.psm1'"
         IF "!IS_UNRESTRICTED!" == "False" (
             FOR /F %%i IN ('POWERSHELL -Command """$(Get-ExecutionPolicy -Scope Machine)$(Get-ExecutionPolicy -Scope User)"""') DO (SET POLICY=%%i)
             IF "!POLICY!" NEQ "UndefinedUndefined" (
