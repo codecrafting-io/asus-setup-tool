@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.1
+
+- Updated references for UninstallTool version 2.2.5.0
+
 ## v0.5.0
 
 - Added LiveDash warning before answering question
