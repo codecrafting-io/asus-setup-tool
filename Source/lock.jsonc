@@ -1,6 +1,13 @@
 {
     "Apps": [
-        "AiSuite3", "Aura", "LiveDash", "AsPowerBar", "DipAwayMode", "EzUpdt"
+        "AiSuite3",
+        "ArmouryCrate",
+        "Armoury Crate Full Installation Package UI",
+        "AsPowerBar",
+        "Aura",
+        "DipAwayMode",
+        "EzUpdt",
+        "LiveDash"
     ],
     "AuraModules": {
         "AacAIOFanSetup.exe": "Asus AIO"

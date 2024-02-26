@@ -48,8 +48,8 @@ function Compare-SetupIntegrity {
         Resolve-Error $_.Exception 'failed to load lock settings'
     }
 
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "53D41DD7D119EFE2BDB449873974F9F1882A0E315847984394D177A28CFFD258"
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "D366168DF2BBBE44ED63F9BCA10EA91D5BCF96BA74A8067E90BA63F0F563C627"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "B6D8321C0F840D678480285769DE38F01947C281863BA407E1CC2F8DE883269E"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "0DF6BBFD52987A1652D345D474F46923397FDF1A1BC6911F70E1A0D9EC4FF306"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
         try {
@@ -119,32 +119,71 @@ function Write-HeaderTitle {
 
 <#
 .SYNOPSIS
+    Intialize Asus Setup asking important questions
+#>
+function Initialize-AsusSetup {
+
+    try {
+        New-Item '..\Apps' -ItemType Directory -Force | Out-Null
+    } catch {
+        Resolve-Error $_.Exception 'Failed to create folder "Apps"'
+    }
+
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'UninstallOnly' -Value $True
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'HasAuraSync' -Value $False
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'IsOldAura' -Value $False
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'HasLightingService' -Value $False
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'HasLiveDash' -Value $False
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'HasAiSuite' -Value $False
+
+    try {
+        $HasPrevAiSuite = (Test-Path "${Env:ProgramFiles(x86)}\Asus\AI Suite III\AISuite3.exe" -ErrorAction Stop)
+    } catch {
+        Resolve-Error $_.Exception 'Failed to initialize'
+    }
+
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'HasPrevAiSuite' -Value $HasPrevAiSuite
+
+    if ((Read-Host 'Only uninstall apps?') -eq 'N') {
+        $SetupSettings.UninstallOnly = $False
+        Write-Host "`nChoose one AuraSync option:"
+        Write-Host "  1 - NEW: Version 1.07.84_v2 for the latest product support, but it is more bloated" -ForegroundColor Cyan
+        Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020' -ForegroundColor Cyan
+        Write-Host '  3 - Do not install AuraSync' -ForegroundColor Cyan
+
+        switch((Read-Host '[1] NEW [2] OLD [3] Do not install')) {
+            1 {
+                $SetupSettings.HasAuraSync = $True
+                $SetupSettings.HasLightingService = $True
+            }
+            2 {
+                $SetupSettings.HasAuraSync = $True
+                $SetupSettings.IsOldAura = $True
+                $SetupSettings.HasLightingService = $True
+            }
+        }
+
+        Write-Host ''
+        Write-Warning 'LiveDash requires LightingService patching which may be incompatible with products after 2020'
+        if ((Read-Host 'Want LiveDash (controls OLED screen)? [Y] Yes [N] No') -eq 'Y') {
+            $SetupSettings.HasLiveDash = $True
+            $SetupSettings.HasLightingService = $True
+
+            #This is minor regression in functionality. LiveDash with the new LightingService only possible installing AuraSync
+            $SetupSettings.IsOldAura = $True
+        }
+
+        if ((Read-Host 'Install AiSuite 3? [Y] Yes [N] No') -eq 'Y') {
+            $SetupSettings.HasAiSuite = $True
+        }
+    }
+}
+
+<#
+.SYNOPSIS
     Download and extract ASUS Setups
-
-.PARAMETER LiveDashUrl
-    The LiveDashUrl to be downloaded. If empty or $null LiveDash is skipped (Mandatory)
-
-.EXAMPLE
-    Get-ASUSSetup -LiveDashUrl 'LiveDashURL'
 #>
 function Get-ASUSSetup {
-    [CmdletBinding()]
-
-    $SetupSettings | Add-Member -Type NoteProperty -Name 'HasLiveDash' -Value $False
-    $SetupSettings | Add-Member -Type NoteProperty -Name 'IsOldAura' -Value $True
-
-    Write-Host 'Choose the AuraSync version:'
-    Write-Host "  1 - NEW: Version 1.07.84_v2 for the latest product support, but it is more bloated" -ForegroundColor Cyan
-    Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020' -ForegroundColor Cyan
-    if ((Read-Host '[1] NEW [2] OLD') -eq '1') {
-        $SetupSettings.IsOldAura = $False
-    }
-
-    Write-Host ''
-    Write-Warning 'LiveDash requires LightingService patching which may be incompatible with products after 2020'
-    if ((Read-Host 'Want LiveDash (controls OLED screen)? [Y] Yes [N] No') -eq 'Y') {
-        $SetupSettings.HasLiveDash = $True
-    }
 
     foreach ($Setup in $SetupSettings.Setups) {
         #Skip LiveDash

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.0
+
+- Reworked setup flow. Main questions are asked first now
+- Improved 'CLEAR ASUS BLOATWARE' step
+- Added uninstall only option
+- UninstallTool progress bar window is now hidden due to version 2.2.5.0
+
 ## v0.5.1
 
 - Updated references for UninstallTool version 2.2.5.0
