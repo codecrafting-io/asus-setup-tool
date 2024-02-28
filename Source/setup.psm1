@@ -48,7 +48,7 @@ function Compare-SetupIntegrity {
         Resolve-Error $_.Exception 'failed to load lock settings'
     }
 
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "B6D8321C0F840D678480285769DE38F01947C281863BA407E1CC2F8DE883269E"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "05F5F63C9202541A2CD8B5453960C0F6E6F42CE640017FC206098F568DCC2976"
     $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "0DF6BBFD52987A1652D345D474F46923397FDF1A1BC6911F70E1A0D9EC4FF306"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
@@ -131,7 +131,7 @@ function Initialize-AsusSetup {
 
     $SetupSettings | Add-Member -Type NoteProperty -Name 'UninstallOnly' -Value $True
     $SetupSettings | Add-Member -Type NoteProperty -Name 'HasAuraSync' -Value $False
-    $SetupSettings | Add-Member -Type NoteProperty -Name 'IsOldAura' -Value $False
+    $SetupSettings | Add-Member -Type NoteProperty -Name 'IsOldAura' -Value $True
     $SetupSettings | Add-Member -Type NoteProperty -Name 'HasLightingService' -Value $False
     $SetupSettings | Add-Member -Type NoteProperty -Name 'HasLiveDash' -Value $False
     $SetupSettings | Add-Member -Type NoteProperty -Name 'HasAiSuite' -Value $False
@@ -154,11 +154,11 @@ function Initialize-AsusSetup {
         switch((Read-Host '[1] NEW [2] OLD [3] Do not install')) {
             1 {
                 $SetupSettings.HasAuraSync = $True
+                $SetupSettings.IsOldAura = $False
                 $SetupSettings.HasLightingService = $True
             }
             2 {
                 $SetupSettings.HasAuraSync = $True
-                $SetupSettings.IsOldAura = $True
                 $SetupSettings.HasLightingService = $True
             }
         }
@@ -168,9 +168,6 @@ function Initialize-AsusSetup {
         if ((Read-Host 'Want LiveDash (controls OLED screen)? [Y] Yes [N] No') -eq 'Y') {
             $SetupSettings.HasLiveDash = $True
             $SetupSettings.HasLightingService = $True
-
-            #This is minor regression in functionality. LiveDash with the new LightingService only possible installing AuraSync
-            $SetupSettings.IsOldAura = $True
         }
 
         if ((Read-Host 'Install AiSuite 3? [Y] Yes [N] No') -eq 'Y') {
@@ -187,6 +184,9 @@ function Get-ASUSSetup {
 
     foreach ($Setup in $SetupSettings.Setups) {
         #Skip LiveDash
+        if ($Setup.File -ne 'UninstallTool' -and $SetupSettings.UninstallOnly) {
+            continue
+        }
         if (($Setup.Name -eq 'LiveDash') -and (-not $SetupSettings.HasLiveDash)) {
             continue
         }
@@ -212,21 +212,22 @@ function Get-ASUSSetup {
             Write-Host "$($Setup.Name) already downloaded"
         }
 
-        #Check Hash
+        #Check Hash.
+        #TODO: Improve this check. I know this IF is too bloated, but this is just to not repeat the steps.
         $FileHash = (Get-FileHash $SetupFile -Algorithm SHA256).Hash
-        if ($FileHash -eq $Setup.Hash) {
+        if (
+            $FileHash -eq $Setup.Hash -or
+            (
+                ($Setup.File -eq 'UninstallTool') -and
+                ((Read-HostColor 'UninstallTool integrity check failed. Tool could be updated. Wish to proceed? [Y] YES [N] NO: ' Yellow) -eq 'Y')
+            )
+        ) {
             Write-Host 'Extracting...'
             Remove-Item "$SetupFolder\*" -Recurse -ErrorAction SilentlyContinue
             Expand-Archive $SetupFile -DestinationPath "$SetupFolder\" -Force -ErrorAction Stop
         } else {
-            if (($Setup.File -eq 'UninstallTool') -and
-                (Read-HostColor 'UninstallTool integrity check failed. Tool could be updated. Wish to proceed? [Y] YES [N] NO: ' Yellow) -eq 'Y'
-            ) {
-                continue
-            } else {
-                Remove-Item $SetupFile -Force -ErrorAction Stop
-                throw "Invalid $($Setup.Name) file."
-            }
+            Remove-Item $SetupFile -Force -ErrorAction Stop
+            throw "Invalid $($Setup.Name) file."
         }
     }
 }
@@ -619,6 +620,19 @@ function Update-AsusService {
         Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asComSvc' | Out-Null
     }
 
+    #To only leave ASUS services and processes running when necessary
+    if ((Read-Host 'Let ASUS services and tasks to start with Windows? [Y] Yes [N] No') -eq 'N') {
+        Write-Host 'Setting services to manual startup...'
+        Set-Service -Name 'LightingService' -StartupType Manual -ErrorAction SilentlyContinue
+        Set-Service -Name 'asHmComSvc' -StartupType Manual -ErrorAction SilentlyContinue
+        Set-Service -Name 'asComSvc' -StartupType Manual -ErrorAction SilentlyContinue
+        Set-Service -Name 'AsusCertService' -StartupType Manual -ErrorAction SilentlyContinue
+
+        #Mostly to disable ASUS Update tasks
+        Write-Host 'Disabling ASUS tasks...'
+        Get-ScheduledTask -TaskPath '\Asus\*' | Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
+    }
+
     if (Test-Path '..\Patches\Profiles\LastProfile.xml') {
         Write-Host 'Setting profiles for LightingService (wait, this will take an while)...'
 
@@ -629,19 +643,6 @@ function Update-AsusService {
         Start-Service -Name 'LightingService' -ErrorAction Stop
         Start-SleepCountdown -Message 'Reset LightingService profiles in:' -Seconds 90
         Stop-Service -Name 'LightingService' -Force -ErrorAction Stop
-
-        #To only leave ASUS services and processes running when necessary
-        if ((Read-Host 'Set services to manual startup and disable tasks? [Y] Yes [N] No') -eq 'Y') {
-            Write-Host 'Setting services to manual startup...'
-            Set-Service -Name 'LightingService' -StartupType Manual -ErrorAction SilentlyContinue
-            Set-Service -Name 'asHmComSvc' -StartupType Manual -ErrorAction SilentlyContinue
-            Set-Service -Name 'asComSvc' -StartupType Manual -ErrorAction SilentlyContinue
-            Set-Service -Name 'AsusCertService' -StartupType Manual -ErrorAction SilentlyContinue
-
-            #Mostly to disable ASUS Update tasks
-            Write-Host 'Disabling ASUS tasks...'
-            Get-ScheduledTask -TaskPath '\Asus\*' | Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
-        }
 
         Copy-Item '..\Patches\Profiles\LastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml" -Force -ErrorAction SilentlyContinue
         Copy-Item '..\Patches\Profiles\OledLastProfile.xml' "${Env:ProgramFiles(x86)}\LightingService\OledLastProfile.xml" -Force -ErrorAction SilentlyContinue

@@ -25,7 +25,7 @@ IF %ERRORLEVEL% NEQ 0 (
                 POWERSHELL -Command "Write-Host 'Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process;.\main.ps1' -ForegroundColor Cyan"
                 ECHO Press "[ENTER]" to execute
                 PAUSE >NUL
-                POWERSHELL -NoExit -Command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process;.\main.ps1"
+                POWERSHELL -Command "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process;.\main.ps1"
             )
         ) ELSE (
             POWERSHELL -file main.ps1

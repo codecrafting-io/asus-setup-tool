@@ -6,6 +6,8 @@
 - Improved 'CLEAR ASUS BLOATWARE' step
 - Added uninstall only option
 - UninstallTool progress bar window is now hidden due to version 2.2.5.0
+- Fixed a error when UninstallTool is not downloaded or extracted
+- Set services and tasks to start with Windows question not attached to automatic profiles
 
 ## v0.5.1
 

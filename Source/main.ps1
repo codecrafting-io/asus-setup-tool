@@ -21,6 +21,19 @@ Initialize-AsusSetup
 
 
 #********************************************
+# GET ASUS SETUP STEP
+#********************************************
+
+Write-Host "`nGET ASUS SETUP" -ForegroundColor Green
+try {
+    Get-ASUSSetup -ErrorAction Stop
+} catch {
+    Resolve-Error $_.Exception 'Failed to get AsusSetup. Try again'
+}
+
+
+
+#********************************************
 # CLEAR ASUS BLOATWARE STEP
 #********************************************
 
@@ -28,21 +41,6 @@ Write-Host "`nCLEAR ASUS BLOATWARE" -ForegroundColor Green
 Clear-AsusBloat
 
 if (-Not $SetupSettings.UninstallOnly) {
-
-
-
-    #********************************************
-    # GET ASUS SETUP STEP
-    #********************************************
-
-    Write-Host "`nGET ASUS SETUP" -ForegroundColor Green
-    try {
-        Get-ASUSSetup -ErrorAction Stop
-    } catch {
-        Resolve-Error $_.Exception 'Failed to get AsusSetup. Try again'
-    }
-
-
 
     #********************************************
     # PATCH ASUS SETUP STEP
@@ -68,8 +66,8 @@ if (-Not $SetupSettings.UninstallOnly) {
 
             #Replaces AXSP
             Copy-Item '..\Patches\AiSuite3\DrvResource\AXSP\*' (Get-ChildItem '..\Apps\AuraSync\*AXSP' -Recurse).FullName -Recurse -Force -ErrorAction Stop
-            $FullInstall = Read-Host 'Add all AuraSync modules? [Y] Yes [N] No'
-            if ($FullInstall -eq 'N') {
+            $ChooseModules = Read-Host 'Select which AuraSync modules to install? [Y] Yes [N] No'
+            if ($ChooseModules -eq 'Y') {
                 Write-Host 'Updating AuraSync modules...'
                 Update-AuraModules $AuraModulesPath -ErrorAction Stop
             }
@@ -124,14 +122,6 @@ if (-Not $SetupSettings.UninstallOnly) {
         }
     }
 
-    if ($SetupSettings.HasLightingService) {
-        try {
-            Update-AsusService
-        } catch {
-            Resolve-Error $_.Exception
-        }
-    }
-
     if ($SetupSettings.HasAiSuite) {
         if ($SetupSettings.HasPrevAiSuite) {
             Write-Warning 'Reboot is required after AiSuite3 uninstallation. Install manually later on folder "Apps\AiSuite3"'
@@ -146,9 +136,17 @@ if (-Not $SetupSettings.UninstallOnly) {
         }
     }
 
-    Write-Output 'Removing temp files...'
-    Remove-FileFolder $Env:TEMP -ErrorAction SilentlyContinue
+    if ($SetupSettings.HasLightingService) {
+        try {
+            Update-AsusService
+        } catch {
+            Resolve-Error $_.Exception
+        }
+    }
 }
+
+Write-Output 'Removing temp files...'
+Remove-FileFolder $Env:TEMP -ErrorAction SilentlyContinue
 
 
 
