@@ -11,6 +11,7 @@
 - Reworked setup flow. Questions have been rearranged or changed
 - Set services and tasks to start with Windows question not attached to automatic profiles
 - UninstallTool progress bar window is now hidden due to version 2.2.5.0
+- Fixed some typos
 
 ## v0.5.1
 

@@ -281,7 +281,7 @@ function Clear-AsusBloat {
     #The uninstallation of AiSuite3 only works before removal of services and drivers
     try {
         if (Test-Path $AiSuite3Path) {
-            Write-Host 'Uninstalling AiSuite 3 (wait, this can take an while)...'
+            Write-Host 'Uninstalling AiSuite 3 (wait, this may take a while)...'
             Start-Process "${Env:ProgramData}\ASUS\AI Suite III\Setup.exe" -ArgumentList '-u -s' -Wait -ErrorAction Stop
 
             #AI Suite III may leave a Ryzen Master Kernel Driver inside ASUS folder. Check if even if AiSuite 3 is not installed
@@ -298,7 +298,7 @@ function Clear-AsusBloat {
     }
 
     #For the rest of applications it's better to remove the services first
-    Write-Output 'Removing services (wait, this can take an while)...'
+    Write-Output 'Removing services (wait, this may take a while)...'
     foreach ($Service in $LockSettings.Services) {
         try {
             Remove-DriverService -Name $Service -ErrorAction Stop
@@ -307,7 +307,7 @@ function Clear-AsusBloat {
         }
     }
 
-    Write-Output 'Removing drivers (wait, this can take an while)...'
+    Write-Output 'Removing drivers (wait, this may take a while)...'
     foreach ($Driver in $LockSettings.Drivers) {
         try {
             Remove-DriverService -Name $Driver -ErrorAction Stop
@@ -347,7 +347,7 @@ function Clear-AsusBloat {
         Resolve-Error $_.Exception 'Uninstall apps failed. Manual uninstallation may be required for Aura|LiveDash|AiSuite3'
     }
 
-    Write-Output 'Running Uninstall Tool (wait, this can take an while)...'
+    Write-Output 'Running Uninstall Tool (wait, this may take a while)...'
     try {
         $UninstallSetup = (Get-ChildItem '..\Apps\UninstallTool\*Armoury Crate Uninstall Tool.exe' -Recurse).FullName
         Start-Process $UninstallSetup -ArgumentList '-silent' -Wait
