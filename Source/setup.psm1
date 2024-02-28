@@ -49,7 +49,7 @@ function Compare-SetupIntegrity {
     }
 
     $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "05F5F63C9202541A2CD8B5453960C0F6E6F42CE640017FC206098F568DCC2976"
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "277227C96B61B601048DD151BD8C9685A91ADBF670B5DDE623B0B635090D86BB"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "470DF4AE56C0B8771A777B9F7423CE3E65D97DA14087EE9259A23089A51983CB"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
         try {
@@ -148,7 +148,7 @@ function Initialize-AsusSetup {
         $SetupSettings.UninstallOnly = $False
         Write-Host "`nChoose one AuraSync option:"
         Write-Host "  1 - NEW: Version 1.07.84_v2 for the latest product support, but it is more bloated" -ForegroundColor Cyan
-        Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020' -ForegroundColor Cyan
+        Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020 (best for LiveDash).' -ForegroundColor Cyan
         Write-Host '  3 - Do not install AuraSync' -ForegroundColor Cyan
 
         switch((Read-Host '[1] NEW [2] OLD [3] Do not install')) {
@@ -303,7 +303,7 @@ function Clear-AsusBloat {
         try {
             Remove-DriverService -Name $Service -ErrorAction Stop
         } catch {
-            Resolve-Error $_.Exception "Failed to remove service '$Service'. Reboot and try again"
+            Resolve-Error $_.Exception "Failed to remove service '$Service'. Reboot and/or try again"
         }
     }
 
@@ -386,7 +386,7 @@ function Clear-AsusBloat {
         } catch {
             # Check if files were removed, except drivers because they can get degraded
             if (-Not $File.EndsWith('.sys') -And (Test-Path $File)) {
-                Resolve-Error "Failed to remove '$File'. Restart the PC and try again"
+                Resolve-Error "Failed to remove '$File'. Reboot and try again"
             }
             Write-Debug $_.Exception
         }
@@ -615,13 +615,14 @@ function Update-AsusService {
 
     #Bring some sense to this madness
     Write-Host 'Updating services dependencies...'
-    Stop-Service -Name 'LightingService' -Force -NoWait -ErrorAction Stop
-    Start-Sleep 5
-    Stop-Service -Name 'LightingService' -Force -ErrorAction Stop
     Invoke-Expression 'sc.exe config asComSvc depend= RPCSS/AsusCertService' | Out-Null
     if ($SetupSettings.HasLiveDash) {
         Invoke-Expression 'sc.exe config asHmComSvc depend= RPCSS/asComSvc' | Out-Null
         Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asHmComSvc' | Out-Null
+
+        Stop-Service -Name 'LightingService' -Force -NoWait -ErrorAction SilentlyContinue
+        Start-Sleep 10
+        Stop-Service -Name 'LightingService' -Force -ErrorAction Stop
 
         Write-Host 'Patching LightingService...'
         Copy-Item '..\Patches\MBIsSupported.dll' "${Env:ProgramFiles(x86)}\LightingService\MBIsSupported.dll" -Force -ErrorAction Stop

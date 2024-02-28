@@ -24,7 +24,7 @@
         , "AacMouseSetup.exe": "Mouse"
         , "AacNBDTSetup.exe-UpdateNBDTHal.exe": "Laptop (NBDT)"
         , "AacOddSetup.exe": "ODD Controller"
-        , "AacPatriotM2Setup.exe-AacPatriotDRAMSetup.exe": "Patriot"
+        , "AacPatriotM2Setup.exe-AacPatriotDRAMSetup.exe-AacPatriotSetup.exe": "Patriot"
         , "AacPhisonSetup.exe": "Phison"
         , "aacsetup_jmi_1.0.5.1.exe": "JMI"
         , "AacSetup_WD_Black_AN1500_v1.0.12.0.exe-AacSetup_WD_BLACK_D50_1.0.9.0.exe": "Western Digital"

@@ -91,6 +91,7 @@ Some of known issues:
 - Failed to remove file. Restart the pc and try again. Sometimes files fail to remove, so restart the PC and try again.
 - Failed to remove service. Sometimes services failed to be removed, reboot and try again
 - Failed to remove AiSuite3. Reboot and try again.
+- AuraSync does not detect my devices. This is due to LightingService not being started or not detecting devices properly. Try the new AuraSync version and select only the modules that fit your needs. If that doesn't work and your product is released after the first half of 2023, AuraSync may simply not support it.
 
 If you still have errors using the tool, open a PowerShell as a Administrator, navigate to the directory where you extract the tool, type the command `$global:DebugPreference = 'Continue'` and then `.\Setup.bat` to run ASUS Setup Tool. Copy the text for a `.txt` file and open an issue.
 

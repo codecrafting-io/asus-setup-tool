@@ -247,7 +247,7 @@ function Remove-DriverService {
     if ($Object) {
         Write-Information "Stopping $ObjectType '$Name'"
         Stop-Service -Name $Name -Force -NoWait
-        Start-Sleep 5
+        Start-Sleep 10
         Stop-Service -Name $Name -Force
 
         Write-Information "Removing $ObjectType '$Name'"

@@ -2,13 +2,15 @@
 
 ## v0.6.0
 
-- Reworked setup flow. Questions have been rearranged or changed
-- Improved 'CLEAR ASUS BLOATWARE' step
 - Added uninstall only option
-- UninstallTool progress bar window is now hidden due to version 2.2.5.0
 - Fixed a error when UninstallTool is not downloaded or extracted
-- Set services and tasks to start with Windows question not attached to automatic profiles
+- Fixed missing Pratiot module when using old AuraSync
+- Improved 'CLEAR ASUS BLOATWARE' step
+- Improved update of Asus services
 - Reduced setup size
+- Reworked setup flow. Questions have been rearranged or changed
+- Set services and tasks to start with Windows question not attached to automatic profiles
+- UninstallTool progress bar window is now hidden due to version 2.2.5.0
 
 ## v0.5.1
 
