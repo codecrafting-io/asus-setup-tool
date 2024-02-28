@@ -72,11 +72,13 @@
         , "GameSDK"
         , "GameSDK Service"
         , "AsSysCtrlService"
-        , "AsIO" //Driver
-        , "AsUpIO" //Driver
-        , "GLCKIO2" //Driver
-        , "Asusgio3" //Driver
-        , "Asusgio2" //Driver
+    ],
+    "Drivers": [
+        "AsIO"
+        , "AsUpIO"
+        , "GLCKIO2"
+        , "Asusgio3"
+        , "Asusgio2"
     ],
     "registries": [
         "HKEY_CLASSES_ROOT\\AacCosairDram.Hal"

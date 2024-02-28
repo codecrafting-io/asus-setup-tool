@@ -244,24 +244,25 @@ function Remove-DriverService {
         $Object = Get-CimInstance -Class Win32_Service -Filter "Name='$Name'"
     }
 
-    #First stop
-    Write-Information "Stopping $ObjectType '$Name'"
-    Stop-Service -Name $Name -Force -NoWait
-    Start-Sleep 5
-    Stop-Service -Name $Name -Force
+    if ($Object) {
+        Write-Information "Stopping $ObjectType '$Name'"
+        Stop-Service -Name $Name -Force -NoWait
+        Start-Sleep 5
+        Stop-Service -Name $Name -Force
 
-    Write-Information "Removing $ObjectType '$Name'"
-    if (Get-Command 'Remove-Service' -ErrorAction SilentlyContinue) {
-        Remove-Service -Name $Name
-    } else {
-        $Object | Remove-CimInstance
+        Write-Information "Removing $ObjectType '$Name'"
+        if (Get-Command 'Remove-Service' -ErrorAction SilentlyContinue) {
+            Remove-Service -Name $Name
+        } else {
+            $Object | Remove-CimInstance
+        }
+
+        #Recommended by Microsoft
+        Invoke-Expression "sc.exe delete '$Name'" | Out-Null
+
+        #Sometimes helps
+        Stop-Process -Name $Name -Force -ErrorAction SilentlyContinue
     }
-
-    #Recommended by Microsoft
-    Invoke-Expression "sc.exe delete '$Name'" | Out-Null
-
-    #Sometimes helps
-    Stop-Process -Name $Service -Force -ErrorAction SilentlyContinue
 }
 
 <#

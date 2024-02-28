@@ -49,7 +49,7 @@ function Compare-SetupIntegrity {
     }
 
     $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "05F5F63C9202541A2CD8B5453960C0F6E6F42CE640017FC206098F568DCC2976"
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "0DF6BBFD52987A1652D345D474F46923397FDF1A1BC6911F70E1A0D9EC4FF306"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "277227C96B61B601048DD151BD8C9685A91ADBF670B5DDE623B0B635090D86BB"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
         try {
@@ -279,10 +279,10 @@ function Clear-AsusBloat {
     }
 
     #The uninstallation of AiSuite3 only works before removal of services and drivers
-    if (Test-Path $AiSuite3Path) {
-        Write-Host 'Uninstalling AiSuite 3 (wait, this can take an while)...'
-        try {
-            Start-Process "${Env:ProgramData}\ASUS\AI Suite III\Setup.exe" -ArgumentList '-u -s' -Wait
+    try {
+        if (Test-Path $AiSuite3Path) {
+            Write-Host 'Uninstalling AiSuite 3 (wait, this can take an while)...'
+            Start-Process "${Env:ProgramData}\ASUS\AI Suite III\Setup.exe" -ArgumentList '-u -s' -Wait -ErrorAction Stop
 
             #AI Suite III may leave a Ryzen Master Kernel Driver inside ASUS folder. Check if even if AiSuite 3 is not installed
             $RyzenMasterDrv = Get-CimInstance -Class Win32_SystemDriver | Where-Object { $_.PathName -Like '*AI Suite III*' }
@@ -291,17 +291,26 @@ function Clear-AsusBloat {
                 $RyzenMasterDrv | Stop-Service -Force -ErrorAction Stop
                 $RyzenMasterDrv | Remove-CimInstance -ErrorAction Stop
             }
-        } catch {
-            Write-Debug $_.Exception 'Failed to uninstall AiSuite3'
         }
         Start-Sleep 1
+    } catch {
+        Resolve-Error $_.Exception 'Failed to uninstall AiSuite3'
     }
 
     #For the rest of applications it's better to remove the services first
-    Write-Output 'Removing services and drivers (wait, this can take an while)...'
+    Write-Output 'Removing services (wait, this can take an while)...'
     foreach ($Service in $LockSettings.Services) {
         try {
             Remove-DriverService -Name $Service -ErrorAction Stop
+        } catch {
+            Resolve-Error $_.Exception "Failed to remove service '$Service'. Reboot and try again"
+        }
+    }
+
+    Write-Output 'Removing drivers (wait, this can take an while)...'
+    foreach ($Driver in $LockSettings.Drivers) {
+        try {
+            Remove-DriverService -Name $Driver -ErrorAction Stop
         } catch {
             Write-Debug $_.Exception
         }

@@ -88,7 +88,9 @@ Some of known issues:
 - The `SET ASUS SERVICE` fails: Reboot the system and try again. You may have to disable or uninstall the antivirus or Windows core isolation.
 - The POWERSHELL file script execution are managed by a group policy. When the execution policy of POWERSHELL file scripts are managed by a system group policy (User or Machine), you have to change to at least `RemoteSigned (allow local and remote)` before proceed. Check more with [this link](https://www.youtube.com/watch?v=zW69MisrsWk) to see more.
 - POWERSHELL is not in "FullLanguage" mode. When POWERSHELL is not set to "FullLanguage" mode, it is not possible to run the setup properly. To see more, check [this link](https://youtu.be/zW69MisrsWk?si=xLg4FjN4tbdveeP7&t=142).
-- Failed to remove file. Restart the pc and try again. Sometimes files fail to remove, so restart the PC and try again
+- Failed to remove file. Restart the pc and try again. Sometimes files fail to remove, so restart the PC and try again.
+- Failed to remove service. Sometimes services failed to be removed, reboot and try again
+- Failed to remove AiSuite3. Reboot and try again.
 
 If you still have errors using the tool, open a PowerShell as a Administrator, navigate to the directory where you extract the tool, type the command `$global:DebugPreference = 'Continue'` and then `.\Setup.bat` to run ASUS Setup Tool. Copy the text for a `.txt` file and open an issue.
 
