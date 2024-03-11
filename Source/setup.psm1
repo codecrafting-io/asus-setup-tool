@@ -642,7 +642,7 @@ function Update-AsusService {
     }
 
     if (Test-Path '..\Patches\Profiles\LastProfile.xml') {
-        Write-Host 'Setting profiles for LightingService (wait, this will take an while)...'
+        Write-Host 'Setting profiles for LightingService...'
 
         #Asus LightingService is too sensitive and some times don't load profiles properly
         if (Test-Path "${Env:ProgramFiles(x86)}\LightingService\LastProfile.xml") {

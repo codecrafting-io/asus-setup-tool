@@ -48,7 +48,7 @@ function Resolve-Error {
     Write messages to the host and log to a file
 
 .PARAMETER Message
-    The message object. Can be a string or an exception
+    The message object. If object is an ErrorRecord it will log the exception details
 
 .PARAMETER Level
     The standard log levels (INFO, WARN, ERROR, DEBUG, VERBOSE) + HOST to write without a log level.
@@ -76,9 +76,8 @@ function Write-Log {
         [System.Object] $Message,
 
         [String] $Level = 'HOST',
-
         [string][ValidateNotNullOrEmpty()] $Folder = '.\Log',
-        [int] $FileRotation = 2,
+        [int][ValidateRange(1, 100)] $FileRotation = 2,
         [bool] $OutputHost = $True,
         [string] $HostColor,
         [switch] $CloseWriter = $False
@@ -118,11 +117,11 @@ function Write-Log {
     }
 
     $Stamp = (Get-Date).toString("yyyy/MM/dd HH:mm:ss")
-    if (-Not $Global:LogFile) {
+    if (-Not $Global:_LogFile) {
         $File = "$Folder\$((Get-Date).toString("yyyy-MM-dd")).log"
         try {
-            $Global:LogFile = [System.IO.StreamWriter]::new($File, $True, [System.Text.Encoding]::UTF8)
-            $LogFile.AutoFlush = $True
+            $Global:_LogFile = [System.IO.StreamWriter]::new($File, $True, [System.Text.Encoding]::UTF8)
+            $_LogFile.AutoFlush = $True
         } catch {
             Write-Error 'Failed to initialize Log'
             Write-Debug $_.Exception
@@ -147,11 +146,7 @@ function Write-Log {
     }
 
     # Using a StreamWriter is more reliable for recurring writes to a file
-    $LogFile.WriteLine($Line)
-    #Add-Content $File -Value $Line -Force -Encoding utf8
-
-    #Sanitize and limit file rotation to 100
-    $FileRotation = [Math]::Max(1, [Math]::Min(100, [Math]::Abs($FileRotation)))
+    $_LogFile.WriteLine($Line)
 
     #Get only files of the first level order by LastWriteTime
     $Files = Get-ChildItem $Folder -File -Depth 0 | Sort-Object LastWriteTime,Name
@@ -165,8 +160,8 @@ function Write-Log {
 
     if ($CloseWriter) {
         Write-Debug 'Closing writer'
-        $LogFile.Close()
-        $LogFile = $Null
+        $_LogFile.Close()
+        $_LogFile = $Null
     }
 }
 
@@ -267,8 +262,9 @@ function Remove-FileFolder {
     if (Test-Path $Path -PathType Leaf) {
         Remove-Item -Path $Path -Force -Recurse
     } else {
-        $Files = Get-ChildItem -LiteralPath $Path -Recurse -Force
-        $LastException = $null
+        #Sort descending to remove files bottom up, avoiding file not found errors
+        $Files = Get-ChildItem -LiteralPath $Path -Recurse -Force | Sort-Object FullName -Descending
+        $LastException = $Null
         foreach ($File in $Files) {
             try {
                 Remove-Item $File.FullName -Force -Recurse -ErrorAction Stop

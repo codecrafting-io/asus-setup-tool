@@ -7,6 +7,7 @@
 - Added some files to be removed
 - Minor revision for 'GET ASUS SETUP' and 'CLEAR ASUS BLOATWARE'
 - Added log system
+- Improved removal of files
 - Improved performance
 
 ## v0.6.0
