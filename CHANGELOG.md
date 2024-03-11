@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.0
+
+- Updated AXSP service to 4.02.32 (keep axIns.exe from 4.02.23 to avoid VirusTotal detection)
+- Updated ASIO3 Driver to 1.2.22.0
+- Added some files to be removed
+
 ## v0.6.0
 
 - Added uninstall only option
