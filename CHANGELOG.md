@@ -2,13 +2,14 @@
 
 ## v0.7.0
 
-- Updated AXSP service to 4.02.32 (keep axIns.exe from 4.02.23 to avoid VirusTotal detection)
-- Updated ASIO3 Driver to 1.2.22.0
-- Added some files to be removed
-- Minor revision for 'GET ASUS SETUP' and 'CLEAR ASUS BLOATWARE'
 - Added log system
-- Improved removal of files
+- Added some files to be removed
 - Improved performance
+- Improved removal of files
+- Improved stopping apps
+- Minor revision for 'GET ASUS SETUP' and 'CLEAR ASUS BLOATWARE'
+- Updated ASIO3 Driver to 1.2.22.0
+- Updated AXSP service to 4.02.32 (keep axIns.exe from 4.02.23 to avoid VirusTotal detection)
 
 ## v0.6.0
 

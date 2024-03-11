@@ -1,13 +1,18 @@
 {
     "Apps": [
-        "AiSuite3",
-        "ArmouryCrate",
-        "Armoury Crate Full Installation Package UI",
-        "AsPowerBar",
-        "Aura",
-        "DipAwayMode",
-        "EzUpdt",
-        "LiveDash"
+        "AcPowerNotification"
+        , "AiSuite3"
+        , "Armoury Crate Full Installation Package UI"
+        , "Armoury Crate Installer"
+        , "ArmouryCrate"
+        , "AsPowerBar"
+        , "Aura"
+        , "AuraEditor"
+        , "DipAwayMode"
+        , "EzUpdt"
+        , "LiveDash"
+        , "Uninstaller"
+        , "Virtual Pet"
     ],
     "AuraModules": {
         "AacAIOFanSetup.exe": "Asus AIO"

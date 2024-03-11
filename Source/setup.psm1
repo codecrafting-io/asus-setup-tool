@@ -49,7 +49,7 @@ function Compare-SetupIntegrity {
     }
 
     $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "E94A48D6242742F871F9AECF2E5331DD022A0C664607C54CAA8C6F78B6084761"
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "F1F16F0BC83446AC12219DAE0BF796BF24A749D53D0D6C66AB407772575CFB46"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "48F1BC2503B499E66DD371131873DE23FC289454F9B965762582CEFB618B9F22"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
         try {
@@ -182,6 +182,8 @@ function Initialize-AsusSetup {
 #>
 function Get-ASUSSetup {
 
+    #Sometimes UninstallTool gets stuck
+    Get-Process | Where-Object { $_.ProcessName -Match 'Uninstaller' } | Stop-Process -Force -ErrorAction Stop
     foreach ($Setup in $SetupSettings.Setups) {
         #Skip LiveDash
         if ($Setup.File -ne 'UninstallTool' -and $SetupSettings.UninstallOnly) {
@@ -265,12 +267,12 @@ function Clear-AsusBloat {
     $GlckIODriver = "${Env:ProgramData}\Package Cache\$($SetupSettings.GlckIODriverGuid)\GlckIODrvSetup.exe"
 
     Write-Host 'Stopping apps...'
-
     try {
         Get-Process | Where-Object { $_.ProcessName -Match ($LockSettings.Apps -join '|') } | Stop-Process -Force -ErrorAction Stop
     } catch {
         Resolve-Error $_ 'Failed to stop apps'
     }
+    Start-Sleep 1
 
     #The uninstallation of AiSuite3 only works before removal of services and drivers
     try {
@@ -632,6 +634,7 @@ function Update-AsusService {
     if ((Read-Host 'Let ASUS services and tasks to start with Windows? [Y] Yes [N] No') -eq 'N') {
         Write-Host 'Setting services to manual startup...'
         Set-Service -Name 'LightingService' -StartupType Manual -ErrorAction SilentlyContinue
+        Set-Service -Name 'AsusFanControlService' -StartupType Manual -ErrorAction SilentlyContinue
         Set-Service -Name 'asHmComSvc' -StartupType Manual -ErrorAction SilentlyContinue
         Set-Service -Name 'asComSvc' -StartupType Manual -ErrorAction SilentlyContinue
         Set-Service -Name 'AsusCertService' -StartupType Manual -ErrorAction SilentlyContinue
