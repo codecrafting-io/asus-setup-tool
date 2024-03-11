@@ -18,10 +18,12 @@ This is an PowerShell script tool that manages the setup installation for the le
 **NOTE: Before you proceed, note that this tool is experimental, still in early stages, provided as is and may not work or require manual tweaking.**
 
 - Create a System Restore point (recommended), [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
-- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.6.0.zip).
+- Download [ASUS Setup Tool here](/../../archive/refs/tags/v0.7.0.zip).
 - Extract the zip contents to a folder.
 - The [Windows core insolation](https://www.makeuseof.com/core-isolation-memory-integrity-windows/#:~:text=On%20the%20left%20side%20menu%20of%20the%20Windows%20Security%20app,the%20changes%20to%20take%20effect.) can interfere with the operation of ASUS Kernel drivers, so you may have to disable it.
 - If you have a third party antivirus, you **may have to disable file and thread security check features or even uninstall it**. After this reboot the system and then proceed. You can re-enable/re-install the antivirus later.
+- For Intel CPUs you may have to disable "Execute Disable Bit" in BIOS settings.
+- Using ArmouryCrate with AuraSync is possible but not recommended.
 
 ## Instructions
 
@@ -35,18 +37,18 @@ This is an PowerShell script tool that manages the setup installation for the le
 
     ![ASUS Setup Tool powershell execution policy](/Source/Images/screen2.png?raw=true)
 
-- Choose `Y` for just uninstall apps, or `n` no if you also want to install. The installation will first uninstall everything.
+- Choose `Y` for just uninstall apps, or `n` no to select which apps to install. The setup will first uninstall everything.
 
     ![ASUS Setup Tool AuraSync version](/Source/Images/screen3.png?raw=true)
 
 - Select which version of AuraSync you want, by typing `1`, `2`, `3` to no install:
-  - 1 - NEW: Version **1.07.84_v2** if you want the latest hardware support available, but this version has more bloated modules, which leads to more processes running on the system.
-  - 2 - OLD: Version **1.07.66** has a less bloated module installation, but may not have support for products launched after 2020.
-  - 3 Do not install: Use this to **not** install aura sync.
+  - 1 - **NEW:** Version **1.07.84_v2** if you want the latest hardware support available, but this version has more bloated modules, which leads to more processes running on the system.
+  - 2 - **OLD:** Version **1.07.66** has a less bloated module installation, but may not have support for products launched after 2020.
+  - 3 - **Do not install:** Use this to **not** install aura sync.
 
-- Choose if you want to install LiveDash. **The installation of LiveDash requires patching LightingService, which may lead to incompatibility for products launched after 2020. This will also affect AuraSync installation.**.
+- Choose if you want to install LiveDash. **The installation of LiveDash requires patching LightingService, which may lead to incompatibility for products launched after 2020. This will also affect AuraSync installation.**. The "OLD" AuraSync version recommended if you install LiveDash.
 - Choose if you want to install AiSuite3. Notice that if you had AiSuite3 installed prior to executing ASUS Setup Tool, a reboot is required. You can install manually later. In this case, you can find AiSuite3 inside `Apps` folder.
-- The selected applications will be downloaded along with the Armoury Crate Uninstall Tool. AiSuite3 will be downloaded to set up some services correctly, but installation is optional. If you choose "Uninstall only", only the Uninstall Tool will be downloaded.
+- The selected applications will be downloaded along with the Armoury Crate Uninstall Tool. AiSuite3 is used to set up some services correctly, but installation is optional. If you choose "Uninstall only", only the Uninstall Tool will be downloaded.
 - The uninstallation of all ASUS products will begin. This **will remove any related ASUS Software!**. This **process can take several minutes, please wait**.
 
     ![ASUS Setup Tool installation step](/Source/Images/screen5.png?raw=true)
@@ -93,7 +95,9 @@ Some of known issues:
 - Failed to remove AiSuite3. Reboot and try again.
 - AuraSync does not detect my devices. This is due to LightingService not being started or not detecting devices properly. Try the new AuraSync version and select only the modules that fit your needs. If that doesn't work and your product is released after the first half of 2023, AuraSync may simply not support it.
 
-If you still have errors using the tool, open a PowerShell as a Administrator, navigate to the directory where you extract the tool, type the command `$global:DebugPreference = 'Continue'` and then `.\Setup.bat` to run ASUS Setup Tool. Copy the text for a `.txt` file and open an issue.
+## Still have problems?
+
+Sometimes it is very difficult to understand the behavior of Asus software, especially related to system or antivirus blocking actions. If you still have problems with this tool, open a [issue](https://github.com/codecrafting-io/asus-setup-tool/issues), print your terminal and send the latest log file inside `Source\Log`.
 
 ## Settings
 

@@ -45,7 +45,7 @@ function Compare-SetupIntegrity {
     try {
         $Global:LockSettings = Get-Json '..\Source\lock.jsonc' -ErrorAction Stop
     } catch {
-        Resolve-Error $_.Exception 'failed to load lock settings'
+        Resolve-Error $_ 'failed to load lock settings'
     }
 
     $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "E94A48D6242742F871F9AECF2E5331DD022A0C664607C54CAA8C6F78B6084761"
@@ -58,7 +58,7 @@ function Compare-SetupIntegrity {
             }
         }
         catch {
-            Resolve-Error $_.Exception
+            Resolve-Error $_
         }
     }
 
@@ -83,9 +83,9 @@ function Import-Config {
 
     try {
         $Settings = Get-Json '..\Source\settings.json' -ErrorAction Stop
-        Write-Information $Settings
+        Write-Log $Settings -Level 'INFO'
     } catch {
-        Resolve-Error $_.Exception 'failed to load configuration file'
+        Resolve-Error $_ 'failed to load configuration file'
     }
 
     $Global:SetupSettings = $Settings
@@ -126,7 +126,7 @@ function Initialize-AsusSetup {
     try {
         New-Item '..\Apps' -ItemType Directory -Force | Out-Null
     } catch {
-        Resolve-Error $_.Exception 'Failed to create folder "Apps"'
+        Resolve-Error $_ 'Failed to create folder "Apps"'
     }
 
     $SetupSettings | Add-Member -Type NoteProperty -Name 'UninstallOnly' -Value $True
@@ -139,7 +139,7 @@ function Initialize-AsusSetup {
     try {
         $HasPrevAiSuite = (Test-Path "${Env:ProgramFiles(x86)}\Asus\AI Suite III\AISuite3.exe" -ErrorAction Stop)
     } catch {
-        Resolve-Error $_.Exception 'Failed to initialize'
+        Resolve-Error $_ 'Failed to initialize'
     }
 
     $SetupSettings | Add-Member -Type NoteProperty -Name 'HasPrevAiSuite' -Value $HasPrevAiSuite
@@ -248,12 +248,6 @@ function Get-ASUSSetup {
 .OUTPUTS
     Description of objects that are output by the script.
 
-.EXAMPLE
-    Resolve-Error -Exception $_.Exception
-
-.EXAMPLE
-    Resolve-Error -Exception $_.Exception -Message 'Exit Message Here'
-
 .LINK
     Links to further documentation.
 
@@ -270,12 +264,12 @@ function Clear-AsusBloat {
     $AiSuite3Path = "${Env:ProgramFiles(x86)}\Asus\AI Suite III\AISuite3.exe"
     $GlckIODriver = "${Env:ProgramData}\Package Cache\$($SetupSettings.GlckIODriverGuid)\GlckIODrvSetup.exe"
 
-    Write-Output 'Stopping apps...'
+    Write-Host 'Stopping apps...'
 
     try {
         Get-Process | Where-Object { $_.ProcessName -Match ($LockSettings.Apps -join '|') } | Stop-Process -Force -ErrorAction Stop
     } catch {
-        Resolve-Error $_.Exception 'Failed to stop apps'
+        Resolve-Error $_ 'Failed to stop apps'
     }
 
     #The uninstallation of AiSuite3 only works before removal of services and drivers
@@ -294,25 +288,25 @@ function Clear-AsusBloat {
         }
         Start-Sleep 1
     } catch {
-        Resolve-Error $_.Exception 'Failed to uninstall AiSuite3'
+        Resolve-Error $_ 'Failed to uninstall AiSuite3'
     }
 
     #For the rest of applications it's better to remove the services first
-    Write-Output 'Removing services (wait, this may take a while)...'
+    Write-Host 'Removing services (wait, this may take a while)...'
     foreach ($Service in $LockSettings.Services) {
         try {
             Remove-DriverService -Name $Service -ErrorAction Stop
         } catch {
-            Resolve-Error $_.Exception "Failed to remove service '$Service'. Reboot and/or try again"
+            Resolve-Error $_ "Failed to remove service '$Service'. Reboot and/or try again"
         }
     }
 
-    Write-Output 'Removing drivers (wait, this may take a while)...'
+    Write-Host 'Removing drivers (wait, this may take a while)...'
     foreach ($Driver in $LockSettings.Drivers) {
         try {
             Remove-DriverService -Name $Driver -ErrorAction Stop
         } catch {
-            Write-Debug $_.Exception
+            Write-Log $_ -Level 'DEBUG' -ErrorAction SilentlyContinue
         }
     }
 
@@ -344,10 +338,10 @@ function Clear-AsusBloat {
         }
     } catch {
         #In case of error manual uninstallation is required here
-        Resolve-Error $_.Exception 'Uninstall apps failed. Manual uninstallation may be required for Aura|LiveDash|AiSuite3'
+        Resolve-Error $_ 'Uninstall apps failed. Manual uninstallation may be required for Aura|LiveDash|AiSuite3'
     }
 
-    Write-Output 'Running Uninstall Tool (wait, this may take a while)...'
+    Write-Host 'Running Uninstall Tool (wait, this may take a while)...'
     try {
         $UninstallSetup = (Get-ChildItem '..\Apps\UninstallTool\*Armoury Crate Uninstall Tool.exe' -Recurse).FullName
         Start-Process $UninstallSetup -ArgumentList '-silent' -Wait
@@ -356,12 +350,12 @@ function Clear-AsusBloat {
         Start-Process $UninstallSetup -ArgumentList '-silent' -Wait
         Start-Sleep 1
     } catch {
-        Resolve-Error $_.Exception 'Uninstall tool failed'
+        Resolve-Error $_ 'Uninstall tool failed'
     }
 
-    Write-Output 'Removing tasks...'
+    Write-Host 'Removing tasks...'
     try {
-        Write-Information 'Unregister tasks'
+        Write-Log 'Unregister tasks' -Level 'INFO'
         Unregister-ScheduledTask -TaskPath '\Asus\*' -Confirm:$False -ErrorAction Stop
 
         $Sch = New-Object -ComObject Schedule.Service
@@ -369,40 +363,44 @@ function Clear-AsusBloat {
         $RootFolder = $Sch.GetFolder("\")
         $RootFolder.DeleteFolder('Asus', $Null)
 
-        Write-Information 'Removing Task folder'
+        Write-Log 'Removing Task folder' -Level 'INFO'
         Remove-Item "$Env:SystemRoot\System32\Asus" -ErrorAction Stop
     } catch {
-        Write-Debug $_.Exception
+        Write-Log $_ -Level 'ERROR' -OutputHost $False -ErrorAction SilentlyContinue
     }
 
-    Write-Output 'Removing files...'
+    Write-Host 'Removing files...'
 
     foreach ($File in $LockSettings.Files) {
         $File = Get-ExpandedStringVariables $File
-        Write-Information "Removing '$File'"
         try {
+            Write-Log "Removing '$File'" -Level 'INFO' -ErrorAction SilentlyContinue
             #Will delete folder but don't stop on first error
             Remove-FileFolder $File $True -ErrorAction Stop
+        } catch [System.Management.Automation.ItemNotFoundException] {
+            Write-Log "File '$File' not found" -Level 'DEBUG' -ErrorAction SilentlyContinue
         } catch {
             # Check if files were removed, except drivers because they can get degraded
             if (-Not $File.EndsWith('.sys') -And (Test-Path $File)) {
-                Resolve-Error "Failed to remove '$File'. Reboot and try again"
+                Resolve-Error $_ "Failed to remove '$File'. Reboot and try again"
             }
-            Write-Debug $_.Exception
+            Write-Log $_ -Level 'ERROR' -OutputHost $False -ErrorAction SilentlyContinue
         }
     }
 
-    Write-Output 'Removing registries...'
+    Write-Host 'Removing registries...'
     foreach ($Registry in $LockSettings.Registries) {
-        Write-Information "Removing '$Registry'"
+        Write-Log "Removing '$Registry'" -Level 'INFO' -ErrorAction SilentlyContinue
         try {
             $Registry = $Registry.Replace('<usersid>', $UserSID)
             $Registry = $Registry.Replace('<aurasyncguid>', $SetupSettings.AuraSyncGuid)
             $Registry = $Registry.Replace('<livedashguid>', $SetupSettings.LiveDashGuid)
 
             Remove-Item "Registry::$Registry" -Recurse -Force -ErrorAction Stop
+        } catch [System.Management.Automation.ItemNotFoundException] {
+            Write-Log "Registry '$Registry' not found" -Level 'DEBUG' -ErrorAction SilentlyContinue
         } catch {
-            Write-Debug $_.Exception
+            Write-Log $_ -Level 'ERROR' -OutputHost $False -ErrorAction SilentlyContinue
         }
     }
 
@@ -454,21 +452,21 @@ function Update-AuraModules {
         if ($Module.Length -gt 0) {
             $ModuleSetup = ($Module.Substring(10, $Module.IndexOf("]'s") - 10))
             if ($Selected.Contains($ModuleSetup)) {
-                Write-Information ($ModuleSetup + ' to keep')
+                Write-Log "$ModuleSetup to keep" -Level 'INFO' -ErrorAction SilentlyContinue
                 $NewModules += $Module
             } else {
                 try {
                     #Newer Aura versions have changed setup folder structure, this search for files
                     Get-ChildItem "$ModulesPath\*$ModuleSetup" -Recurse | Remove-Item -Force -ErrorAction Stop
-                    Write-Information ($ModuleSetup + ' to remove')
+                    Write-Log "$ModuleSetup to remove" -Level 'INFO' -ErrorAction SilentlyContinue
                 } catch {
-                    Write-Debug $_.Exception
+                    Write-Log $_ -Level 'DEBUG' -ErrorAction SilentlyContinue
                 }
             }
         }
     }
 
-    Out-File ($ModulesPath + '\HalVersion.txt') -InputObject $NewModules
+    Out-File "$ModulesPath\HalVersion.txt" -InputObject $NewModules
 }
 
 <#
@@ -479,7 +477,7 @@ function Update-AuraModules {
     Returns a Collections String List with the selected modules
 
 .EXAMPLE
-    Show-AuraDropdown -Exception $_.Exception
+    Show-AuraDropdown
 
 .NOTES
     Detail on what the script does, if this is needed.

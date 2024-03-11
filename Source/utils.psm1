@@ -21,17 +21,153 @@ function Resolve-Error {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory)]
-        [Exception] $Exception,
+        [System.Management.Automation.ErrorRecord] $ErrorContext,
 
-        [String] $Message
+        [String] $Message,
+        [bool] $Stop = $True
     )
 
-    Write-Debug $Exception
-    Write-Host "`n$($Exception.Message)" -ForegroundColor Red
-    Write-Host "`n$Message" -ForegroundColor Red
-    Read-Host -Prompt 'Press [ENTER] to exit'
+    try {
+        Write-Log -Message $ErrorContext -Level 'ERROR' -OutputHost $False -ErrorAction Stop
+    } catch {
+        Write-Error "`nFailed to log error: $($_.Exception.Message)"
+    }
+    $ErrorActionPreference = 'Stop';
 
-    Exit
+    Write-Host "`n$($ErrorContext.Exception.Message)" -ForegroundColor Red
+    Write-Host "`n$Message" -ForegroundColor Red
+
+    if ($Stop) {
+        Read-Host -Prompt 'Press [ENTER] to exit'
+        Exit
+    }
+}
+
+<#
+.SYNOPSIS
+    Write messages to the host and log to a file
+
+.PARAMETER Message
+    The message object. Can be a string or an exception
+
+.PARAMETER Level
+    The standard log levels (INFO, WARN, ERROR, DEBUG, VERBOSE) + HOST to write without a log level.
+    Messages written in the host also use the log level, like: INFO = Write-Information
+
+.PARAMETER Folder
+    The folder locating the log files. Defaults to '.\Log'
+
+.PARAMETER FileRotation
+    The number of log files to keep order by last LastWriteTime. Value must be between 1 and 100
+
+.PARAMETER OutputHost
+    To wether or not to output messages to the host
+
+.PARAMETER HostColor
+    To wether or not to use ForegroundColor when using 'HOST' log level
+
+.EXAMPLE
+    Write-Log 'Some error' -Level 'ERROR'
+#>
+function Write-Log {
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$True)]
+        [System.Object] $Message,
+
+        [String] $Level = 'HOST',
+
+        [string][ValidateNotNullOrEmpty()] $Folder = '.\Log',
+        [int] $FileRotation = 2,
+        [bool] $OutputHost = $True,
+        [string] $HostColor,
+        [switch] $CloseWriter = $False
+    )
+
+    $Level = $Level.ToUpper()
+    if ($OutputHost) {
+        switch ($Level) {
+            'INFO' {
+                Write-Information $Message
+            }
+            'WARN' {
+                Write-Warning $Message
+            }
+            'ERROR' {
+                Write-Error $Message
+            }
+            'DEBUG' {
+                Write-Debug $Message
+            }
+            'VERBOSE' {
+                Write-Verbose $Message
+            }
+            default {
+                $Level = 'HOST'
+                if ($HostColor) {
+                    Write-Host $Message -ForegroundColor $HostColor
+                } else {
+                    Write-Host $Message
+                }
+            }
+        }
+    }
+
+    if (-Not (Test-Path $Folder -PathType Container)) {
+        New-Item -Path $Folder -ItemType Directory | Out-Null
+    }
+
+    $Stamp = (Get-Date).toString("yyyy/MM/dd HH:mm:ss")
+    if (-Not $Global:LogFile) {
+        $File = "$Folder\$((Get-Date).toString("yyyy-MM-dd")).log"
+        try {
+            $Global:LogFile = [System.IO.StreamWriter]::new($File, $True, [System.Text.Encoding]::UTF8)
+            $LogFile.AutoFlush = $True
+        } catch {
+            Write-Error 'Failed to initialize Log'
+            Write-Debug $_.Exception
+            Exit
+        }
+    }
+
+    if ($Level -eq 'HOST') {
+        $Level = ''
+    } else {
+        $Level = "[$Level]"
+    }
+
+    $MessageType = $Message.GetType().FullName
+    if ($MessageType -eq 'System.Management.Automation.ErrorRecord') {
+        $Line = "$Stamp $($Level):"
+        $ExceptionLocation = "$($Message.InvocationInfo.ScriptName):$($Message.InvocationInfo.ScriptLineNumber)"
+        $Line += " caught exception '$($Message.Exception.GetType())' at '$ExceptionLocation'`n"
+        $Line += $Message
+    } else {
+        $Line = "$Stamp $($Level): $Message"
+    }
+
+    # Using a StreamWriter is more reliable for recurring writes to a file
+    $LogFile.WriteLine($Line)
+    #Add-Content $File -Value $Line -Force -Encoding utf8
+
+    #Sanitize and limit file rotation to 100
+    $FileRotation = [Math]::Max(1, [Math]::Min(100, [Math]::Abs($FileRotation)))
+
+    #Get only files of the first level order by LastWriteTime
+    $Files = Get-ChildItem $Folder -File -Depth 0 | Sort-Object LastWriteTime,Name
+
+    #Limit the deletion to delete the first files until the last $FileRotation files. If negative the for will be skipped
+    $Count = $Files.Count - $FileRotation
+    for ($i = 0; $i -lt $Count; $i++) {
+        Write-Debug "File Rotation, exclude: $($Files[$i])"
+        $Files[$i] | Remove-Item -Force
+    }
+
+    if ($CloseWriter) {
+        Write-Debug 'Closing writer'
+        $LogFile.Close()
+        $LogFile = $Null
+    }
 }
 
 <#
@@ -131,7 +267,7 @@ function Remove-FileFolder {
     if (Test-Path $Path -PathType Leaf) {
         Remove-Item -Path $Path -Force -Recurse
     } else {
-        $Files = Get-ChildItem $Path -Recurse
+        $Files = Get-ChildItem -LiteralPath $Path -Recurse -Force
         $LastException = $null
         foreach ($File in $Files) {
             try {
@@ -245,12 +381,12 @@ function Remove-DriverService {
     }
 
     if ($Object) {
-        Write-Information "Stopping $ObjectType '$Name'"
+        Write-Log "Stopping $ObjectType '$Name'" -Level 'INFO'
         Stop-Service -Name $Name -Force -NoWait
-        Start-Sleep 10
+        Start-Sleep 7
         Stop-Service -Name $Name -Force
 
-        Write-Information "Removing $ObjectType '$Name'"
+        Write-Log "Removing $ObjectType '$Name'" -Level 'INFO'
         if (Get-Command 'Remove-Service' -ErrorAction SilentlyContinue) {
             Remove-Service -Name $Name
         } else {
@@ -258,7 +394,8 @@ function Remove-DriverService {
         }
 
         #Recommended by Microsoft
-        Invoke-Expression "sc.exe delete '$Name'" | Out-Null
+        sc.exe delete "$Name" | Out-Null
+        #Invoke-Expression "sc.exe delete '$Name'" | Out-Null
 
         #Sometimes helps
         Stop-Process -Name $Name -Force -ErrorAction SilentlyContinue

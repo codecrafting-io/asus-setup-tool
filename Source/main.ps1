@@ -15,7 +15,7 @@ Import-Module .\setup.psm1
 
 Import-Config
 Write-HeaderTitle
-Write-Host "INIT ASUS SETUP" -ForegroundColor Green
+Write-Log 'INIT ASUS SETUP' -HostColor 'Green' -ErrorAction Stop
 Initialize-AsusSetup
 
 
@@ -24,11 +24,12 @@ Initialize-AsusSetup
 # GET ASUS SETUP STEP
 #********************************************
 
-Write-Host "`nGET ASUS SETUP" -ForegroundColor Green
+Write-Host ''
+Write-Log 'GET ASUS SETUP' -HostColor 'Green' -ErrorAction Stop
 try {
     Get-ASUSSetup -ErrorAction Stop
 } catch {
-    Resolve-Error $_.Exception 'Failed to get AsusSetup. Try again'
+    Resolve-Error $_ 'Failed to get AsusSetup. Try again'
 }
 
 
@@ -37,7 +38,8 @@ try {
 # CLEAR ASUS BLOATWARE STEP
 #********************************************
 
-Write-Host "`nCLEAR ASUS BLOATWARE" -ForegroundColor Green
+Write-Host ''
+Write-Log 'CLEAR ASUS BLOATWARE' -HostColor 'Green' -ErrorAction Stop
 Clear-AsusBloat
 
 if (-Not $SetupSettings.UninstallOnly) {
@@ -46,12 +48,13 @@ if (-Not $SetupSettings.UninstallOnly) {
     # PATCH ASUS SETUP STEP
     #********************************************
 
-    Write-Host "`nPATCH ASUS SETUP" -ForegroundColor Green
+    Write-Host ''
+    Write-Log 'PATCH ASUS SETUP' -HostColor 'Green' -ErrorAction Stop
     Write-Host 'Patching AiSuite3 setup...'
     try {
         Copy-Item '..\Patches\AiSuite3\DrvResource\*' '..\Apps\AiSuite3\DrvResource' -Recurse -Force -ErrorAction Stop
     } catch {
-        Resolve-Error $_.Exception
+        Resolve-Error $_
     }
 
     if ($SetupSettings.HasLightingService) {
@@ -72,7 +75,7 @@ if (-Not $SetupSettings.UninstallOnly) {
                 Update-AuraModules $AuraModulesPath -ErrorAction Stop
             }
         } catch {
-            Resolve-Error $_.Exception
+            Resolve-Error $_
         }
 
         if ($SetupSettings.HasLiveDash) {
@@ -83,7 +86,7 @@ if (-Not $SetupSettings.UninstallOnly) {
                 Copy-Item '..\Patches\AiSuite3\DrvResource\AXSP\*' "$LiveDashPath\AXSP" -Recurse -Force -ErrorAction Stop
                 Copy-Item "$AuraPath\LightingService" $LiveDashPath -Recurse -Force -ErrorAction Stop
             } catch {
-                Resolve-Error $_.Exception
+                Resolve-Error $_
             }
         }
     }
@@ -94,12 +97,13 @@ if (-Not $SetupSettings.UninstallOnly) {
     # INSTALL ASUS SETUP STEP
     #********************************************
 
-    Write-Host "`nINSTALL ASUS SETUP" -ForegroundColor Green
+    Write-Host ''
+    Write-Log 'INSTALL ASUS SETUP' -HostColor 'Green' -ErrorAction Stop
     try {
         Set-AsusService (Resolve-Path '..\Apps\AiSuite3\Setup.exe').Path
         Start-Sleep 5
     } catch {
-        Resolve-Error $_.Exception
+        Resolve-Error $_
     }
 
     if ($SetupSettings.HasAuraSync) {
@@ -108,7 +112,7 @@ if (-Not $SetupSettings.UninstallOnly) {
             Start-Process "$AuraPath\Setup.exe" -ArgumentList '/s /norestart' -Wait
             Start-Sleep 2
         } catch {
-            Resolve-Error $_.Exception
+            Resolve-Error $_
         }
     }
 
@@ -118,7 +122,7 @@ if (-Not $SetupSettings.UninstallOnly) {
             Start-Process "$LiveDashPath\Setup.exe" -ArgumentList '/s /norestart' -Wait -ErrorAction Stop
             Start-Sleep 2
         } catch {
-            Resolve-Error $_.Exception
+            Resolve-Error $_
         }
     }
 
@@ -131,7 +135,7 @@ if (-Not $SetupSettings.UninstallOnly) {
                 Start-Process '..\Apps\AiSuite3\AsusSetup.exe' -ArgumentList '/s /norestart' -Wait
                 Start-Sleep 2
             } catch {
-                Resolve-Error $_.Exception
+                Resolve-Error $_
             }
         }
     }
@@ -140,12 +144,12 @@ if (-Not $SetupSettings.UninstallOnly) {
         try {
             Update-AsusService
         } catch {
-            Resolve-Error $_.Exception
+            Resolve-Error $_
         }
     }
 }
 
-Write-Output 'Removing temp files...'
+Write-Host 'Removing temp files...'
 Remove-FileFolder $Env:TEMP -ErrorAction SilentlyContinue
 
 
@@ -154,6 +158,7 @@ Remove-FileFolder $Env:TEMP -ErrorAction SilentlyContinue
 # ASUS SETUP END
 #********************************************
 
+Write-Log "ASUS SETUP FINISHED" -OutputHost $False -CloseWriter -ErrorAction SilentlyContinue
 $Emoji = Convert-UnicodeToEmoji '1F389'
 Write-Host "`n$Emoji ASUS SETUP TOOL FINISHED WITH SUCCESS! $Emoji" -ForegroundColor Green
 if ((Read-Host 'Reboot system now (recommended)? [Y] Yes [N] No') -eq 'Y') {
