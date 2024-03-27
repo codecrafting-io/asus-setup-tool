@@ -48,8 +48,8 @@ function Compare-SetupIntegrity {
         Resolve-Error $_ 'failed to load lock settings'
     }
 
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "E94A48D6242742F871F9AECF2E5331DD022A0C664607C54CAA8C6F78B6084761"
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "48F1BC2503B499E66DD371131873DE23FC289454F9B965762582CEFB618B9F22"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "EEA5351A93723237599E260BAB49E902277C907E95D13B5050927B363BCEDB8B"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "74DC886D742111204A86B9CD49C314EA4296DBC2619C57896C071A4511C37D3B"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
         try {
@@ -375,6 +375,16 @@ function Clear-AsusBloat {
 
     foreach ($File in $LockSettings.Files) {
         $File = Get-ExpandedStringVariables $File
+
+        #First stop any handles holding the file
+        try {
+            Close-FileHandles $File
+            Start-Sleep 1
+        } catch {
+            Write-Log $_ -Level 'ERROR' -OutputHost $False -ErrorAction SilentlyContinue
+        }
+
+        #Then remove the file
         try {
             Write-Log "Removing '$File'" -Level 'INFO' -ErrorAction SilentlyContinue
             #Will delete folder but don't stop on first error

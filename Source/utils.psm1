@@ -283,6 +283,35 @@ function Remove-FileFolder {
 
 <#
 .SYNOPSIS
+    Find any handle that have the specied $File opened, using Sysinternals Handle utility, and close it
+
+.PARAMETER File
+    The Path file string to be closed
+
+.EXAMPLE
+    Close-FileHandles -File 'File Path'
+#>
+function Close-FileHandles {
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory)]
+        [String][ValidateNotNullOrEmpty()] $File
+    )
+
+    $Handles = (.\Bin\handle.exe "$File" -nobanner -v | ConvertFrom-Csv -ErrorAction Stop)
+    foreach ($Handle in $Handles) {
+        Write-Log "Found handle '$($Handle.Process)' for '$File'" -Level 'DEBUG'
+
+        #Skip explorer and current PowerShell session
+        if ($Handle.Process -ne 'explorer.exe' -or $Handle.PID -ne $PID) {
+            Write-Log "Closing handle '$($Handle.Process):$($Handle.PID)'" -Level 'DEBUG'
+            Stop-Process -Id $Handle.PID -Force -ErrorAction Stop
+        }
+    }
+}
+
+<#
+.SYNOPSIS
 Start a sleep command with countdown
 
 .PARAMETER Message

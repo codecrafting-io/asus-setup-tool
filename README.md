@@ -18,7 +18,7 @@ This is an PowerShell script tool that manages the setup installation for the le
 **NOTE: Before you proceed, note that this tool is experimental, still in early stages, provided as is and may not work or require manual tweaking.**
 
 - Create a System Restore point (recommended), [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
-- Download [ASUS Setup Tool here](/../../releases/download/v0.7.0/Asus-Setup-Tool.zip).
+- Download [ASUS Setup Tool here](/../../releases/download/v0.7.1/Asus-Setup-Tool.zip).
 - Extract the zip contents to a folder.
 - The [Windows core insolation](https://www.makeuseof.com/core-isolation-memory-integrity-windows/#:~:text=On%20the%20left%20side%20menu%20of%20the%20Windows%20Security%20app,the%20changes%20to%20take%20effect.) can interfere with the operation of ASUS Kernel drivers, so you may have to disable it.
 - If you have a third party antivirus, you **may have to disable file and thread security check features or even uninstall it**. After this reboot the system and then proceed. You can re-enable/re-install the antivirus later.
@@ -94,6 +94,7 @@ Some of known issues:
 - Failed to remove service. Sometimes services failed to be removed, reboot and try again
 - Failed to remove AiSuite3. Reboot and try again.
 - AuraSync does not detect my devices. This is due to LightingService not being started or not detecting devices properly. Try the new AuraSync version and select only the modules that fit your needs. If that doesn't work and your product is released after the first half of 2023, AuraSync may simply not support it.
+- Asus Cert Service still running at startup. After AXSP service version 4.02.32, it changes Asus Cert Service to automatic every time the service is started. The only solution is to downgrade to version 4.02.23 (present on <=v0.6.0), or manually revert to manual startup every time.
 
 ## Still have problems?
 
