@@ -2,7 +2,7 @@
 
 ## v0.7.1
 
-- Added [Systeminterals Handle tool](https://learn.microsoft.com/pt-br/sysinternals/downloads/handle) to further improve file removal
+- Added [Sysinternals Handle tool](https://learn.microsoft.com/pt-br/sysinternals/downloads/handle) to further improve file removal
 - Extended AiSuite3 quick setup timeout
 
 ## v0.7.0
