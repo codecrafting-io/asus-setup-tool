@@ -4,6 +4,7 @@
 
 [![GitHub Release](https://img.shields.io/github/v/tag/codecrafting-io/asus-setup-tool?label=version)](https://github.com/codecrafting-io/asus-setup-tool/releases)
 [![Issues](https://img.shields.io/github/issues/codecrafting-io/asus-setup-tool)](https://github.com/codecrafting-io/asus-setup-tool/issues)
+[![Reddit](https://img.shields.io/badge/Reddit-%23FF4500.svg?logo=Reddit&logoColor=white)](https://reddit.com/r/ASUS/comments/15ij4wv/i_created_a_tool_that_finally_manages_to_properly/?sort=confidence)
 
 This is an PowerShell script tool that manages the setup installation for the legacy [Aura Sync](https://www.ASUS.com/campaign/aura), LiveDash, [AiSuite3](https://www.youtube.com/watch?v=MVS2Bx8Uofg), to FINNALY resolve installation errors on **Windows 10/11**. With this tool, you will:
 
