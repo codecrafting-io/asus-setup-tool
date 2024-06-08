@@ -100,7 +100,7 @@ Some of known issues:
 
 ## Still have problems?
 
-Sometimes it is very difficult to understand the behavior of Asus software, especially related to system or antivirus blocking actions. If you still have problems with this tool, open a [issue](https://github.com/codecrafting-io/asus-setup-tool/issues), print your terminal and send the latest log file inside `Source\Log`.
+Sometimes it is very difficult to understand the behavior of Asus software, especially related to system or antivirus blocking actions. If you still have problems with this tool, open a [issue](https://github.com/codecrafting-io/asus-setup-tool/issues), print your terminal and send the latest log file inside `Log` folder.
 
 ## Settings
 

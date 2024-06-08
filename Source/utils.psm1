@@ -76,7 +76,7 @@ function Write-Log {
         [System.Object] $Message,
 
         [String] $Level = 'HOST',
-        [string][ValidateNotNullOrEmpty()] $Folder = '.\Log',
+        [string][ValidateNotNullOrEmpty()] $Folder = '..\Log',
         [int][ValidateRange(1, 100)] $FileRotation = 2,
         [bool] $OutputHost = $True,
         [string] $HostColor,

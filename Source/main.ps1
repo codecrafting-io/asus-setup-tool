@@ -100,7 +100,7 @@ if (-Not $SetupSettings.UninstallOnly) {
     Write-Host ''
     Write-Log 'INSTALL ASUS SETUP' -HostColor 'Green' -ErrorAction Stop
     try {
-        Set-AsusService (Resolve-Path '..\Apps\AiSuite3\Setup.exe').Path -Wait 15
+        Set-AsusService (Resolve-Path '..\Apps\AiSuite3\Setup.exe').Path -Wait 20
         Start-Sleep 5
     } catch {
         Resolve-Error $_

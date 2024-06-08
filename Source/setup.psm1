@@ -48,8 +48,8 @@ function Compare-SetupIntegrity {
         Resolve-Error $_ 'failed to load lock settings'
     }
 
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "EEA5351A93723237599E260BAB49E902277C907E95D13B5050927B363BCEDB8B"
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "74DC886D742111204A86B9CD49C314EA4296DBC2619C57896C071A4511C37D3B"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "A7A6DC06F70E750B3FA7B892277C15639BD3A4C44D9CDE1BE12D3AC6244CBAB2"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "D27296B2991083D3A96A65D85FDA8CDDF6B067CAD943D105851DCECA29326D34"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
         try {
