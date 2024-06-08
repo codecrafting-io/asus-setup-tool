@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.8.0
+
+- Updated AXSP service to 4.03.02 (keep axIns.exe 4.02.23 to avoid VirusTotal detections)
+- Updated reference to Uninstall Tool 2.2.7.0
+- Moved log to root folder
+
 ## v0.7.1
 
 - Added [Sysinternals Handle tool](https://learn.microsoft.com/pt-br/sysinternals/downloads/handle) to further improve file removal
