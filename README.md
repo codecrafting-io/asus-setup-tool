@@ -7,13 +7,13 @@
 [![Github All Releases](https://img.shields.io/github/downloads/codecrafting-io/asus-setup-tool/total?color=blueviolet)](https://github.com/codecrafting-io/asus-setup-tool/releases)
 [![Reddit](https://img.shields.io/badge/Reddit-%23FF4500.svg?logo=Reddit&logoColor=white)](https://reddit.com/r/ASUS/comments/15ij4wv/i_created_a_tool_that_finally_manages_to_properly/?sort=confidence)
 
-This is an PowerShell script tool that manages the setup installation for the legacy [Aura Sync](https://www.ASUS.com/campaign/aura), LiveDash, [AiSuite3](https://www.youtube.com/watch?v=MVS2Bx8Uofg), to FINNALY resolve installation errors on **Windows 10/11**. With this tool, you will:
+The Asus Setup Tool is a PowerShell script tool that manages the setup installation for the legacy [Aura Sync](https://www.ASUS.com/campaign/aura), LiveDash, [AiSuite3](https://www.youtube.com/watch?v=MVS2Bx8Uofg), to FINNALY resolve installation errors on **Windows 10/11**. With this tool, you will:
 
 - Download Aura Sync, LiveDash, AiSuite3 directly from ASUS site.
 - Proper uninstall all ASUS products and pieces of software, including Armoury Crate.
 - Patch ASUS setup files for a correct installation, mostly resolving `AsIO` errors.
 - Choose which modules from Aura Sync you want.
-- Install Aura Sync, LiveDash (optional), AiSuite 3 (optional).
+- Install Aura Sync, LiveDash, AiSuite 3.
 
 ## Preparations
 
@@ -43,7 +43,7 @@ This is an PowerShell script tool that manages the setup installation for the le
 
     ![ASUS Setup Tool AuraSync version](/Source/Images/screen3.png?raw=true)
 
-- Select which version of AuraSync you want, by typing `1`, `2`, `3` to no install:
+- Select which version of AuraSync you want, by typing `1`, `2`, `3`:
   - 1 - **NEW:** Version **1.07.84_v2** if you want the latest hardware support available, but this version has more bloated modules, which leads to more processes running on the system.
   - 2 - **OLD:** Version **1.07.66** has a less bloated module installation, but may not have support for products launched after 2020.
   - 3 - **Do not install:** Use this to **not** install aura sync.
