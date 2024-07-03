@@ -27,6 +27,8 @@ The Asus Setup Tool is a PowerShell script tool that manages the setup installat
 - For Intel CPUs you may have to disable "Execute Disable Bit" in BIOS settings.
 - Using ArmouryCrate with AuraSync is possible but not recommended.
 
+**NOTE:** AuraSync/LiveDash/AiSuite are legacy tools, which means that support may not be available for products released after 2022.
+
 ## Instructions
 
 - Right click on `setup.bat` and `run as administrator`.
@@ -44,7 +46,7 @@ The Asus Setup Tool is a PowerShell script tool that manages the setup installat
     ![ASUS Setup Tool AuraSync version](/Source/Images/screen3.png?raw=true)
 
 - Select which version of AuraSync you want, by typing `1`, `2`, `3`:
-  - 1 - **NEW:** Version **1.07.84_v2** if you want the latest hardware support available, but this version has more bloated modules, which leads to more processes running on the system.
+  - 1 - **NEW:** Version **1.07.84_v2** for products launched until 2023, but this version has more bloated modules, which leads to more processes running on the system. Some products released in 2023 or afterwards may not have support.
   - 2 - **OLD:** Version **1.07.66** has a less bloated module installation, but may not have support for products launched after 2020.
   - 3 - **Do not install:** Use this to **not** install aura sync.
 

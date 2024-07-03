@@ -300,12 +300,15 @@ function Close-FileHandles {
 
     $Handles = (.\Bin\handle.exe "$File" -nobanner -v | ConvertFrom-Csv -ErrorAction Stop)
     foreach ($Handle in $Handles) {
-        Write-Log "Found handle '$($Handle.Process)' for '$File'" -Level 'DEBUG'
+        #Sometime Handle return values but without results. Why?
+        if ($Handle.Process) {
+            Write-Log "Found handle '$($Handle.Process)' for '$File'" -Level 'DEBUG'
 
-        #Skip explorer and current PowerShell session
-        if ($Handle.Process -ne 'explorer.exe' -or $Handle.PID -ne $PID) {
-            Write-Log "Closing handle '$($Handle.Process):$($Handle.PID)'" -Level 'DEBUG'
-            Stop-Process -Id $Handle.PID -Force -ErrorAction Stop
+            #Skip explorer and current PowerShell session
+            if ($Handle.Process -ne 'explorer.exe' -or $Handle.PID -ne $PID) {
+                Write-Log "Closing handle '$($Handle.Process):$($Handle.PID)'" -Level 'DEBUG'
+                Stop-Process -Id $Handle.PID -Force -ErrorAction Stop
+            }
         }
     }
 }

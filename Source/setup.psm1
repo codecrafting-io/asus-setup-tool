@@ -48,7 +48,7 @@ function Compare-SetupIntegrity {
         Resolve-Error $_ 'failed to load lock settings'
     }
 
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "A7A6DC06F70E750B3FA7B892277C15639BD3A4C44D9CDE1BE12D3AC6244CBAB2"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "8AF0366388FED15450F35DED93C9E5654F0D542B4B148DE6602596889846290F"
     $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "D27296B2991083D3A96A65D85FDA8CDDF6B067CAD943D105851DCECA29326D34"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
@@ -147,7 +147,7 @@ function Initialize-AsusSetup {
     if ((Read-Host 'Only uninstall apps?') -eq 'N') {
         $SetupSettings.UninstallOnly = $False
         Write-Host "`nChoose one AuraSync option:"
-        Write-Host "  1 - NEW: Version 1.07.84_v2 for the latest product support, but it is more bloated" -ForegroundColor Cyan
+        Write-Host "  1 - NEW: Version 1.07.84_v2 for products launched until 2023, but it is more bloated" -ForegroundColor Cyan
         Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020 (best for LiveDash).' -ForegroundColor Cyan
         Write-Host '  3 - Do not install AuraSync' -ForegroundColor Cyan
 
