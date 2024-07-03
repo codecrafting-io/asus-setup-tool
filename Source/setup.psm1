@@ -148,7 +148,7 @@ function Initialize-AsusSetup {
         $SetupSettings.UninstallOnly = $False
         Write-Host "`nChoose one AuraSync option:"
         Write-Host "  1 - NEW: Version 1.07.84_v2 for products launched until 2023, but it is more bloated" -ForegroundColor Cyan
-        Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020 (best for LiveDash).' -ForegroundColor Cyan
+        Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020 (best for LiveDash)' -ForegroundColor Cyan
         Write-Host '  3 - Do not install AuraSync' -ForegroundColor Cyan
 
         switch((Read-Host '[1] NEW [2] OLD [3] Do not install')) {
