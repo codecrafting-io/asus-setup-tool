@@ -20,7 +20,7 @@ The Asus Setup Tool is a PowerShell script tool that manages the setup installat
 **NOTE: Before you proceed, note that this tool is experimental, still in early stages, provided as is and may not work or require manual tweaking.**
 
 - Create a System Restore point (recommended), [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
-- Download [ASUS Setup Tool here](/../../releases/download/v0.8.0/Asus-Setup-Tool.zip).
+- Download [ASUS Setup Tool here](/../../releases/download/v0.8.1/Asus-Setup-Tool.zip).
 - Extract the zip contents to a folder.
 - The [Windows core insolation](https://www.makeuseof.com/core-isolation-memory-integrity-windows/#:~:text=On%20the%20left%20side%20menu%20of%20the%20Windows%20Security%20app,the%20changes%20to%20take%20effect.) can interfere with the operation of ASUS Kernel drivers, so you may have to disable it.
 - If you have a third party antivirus, you **may have to disable file and thread security check features or even uninstall it**. After this reboot the system and then proceed. You can re-enable/re-install the antivirus later.
