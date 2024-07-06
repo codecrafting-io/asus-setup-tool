@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.8.1
+
+- Minor setup questions revision
+- Fixed odd case when handle detect process but with empty results
+
 ## v0.8.0
 
 - Updated AXSP service to 4.03.02 (keep axIns.exe 4.02.23 to avoid VirusTotal detections)
