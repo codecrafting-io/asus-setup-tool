@@ -48,7 +48,7 @@ function Compare-SetupIntegrity {
         Resolve-Error $_ 'failed to load lock settings'
     }
 
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "8AF0366388FED15450F35DED93C9E5654F0D542B4B148DE6602596889846290F"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "7111AD3289FB09EAB4CFFEB0C44E69A5C1DF109E95B2DF4EE46BAFD2A3269BC0"
     $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "D27296B2991083D3A96A65D85FDA8CDDF6B067CAD943D105851DCECA29326D34"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
@@ -597,13 +597,18 @@ function Set-AsusService {
     $Start = Get-Date
     $Setup = Start-Process $AiSuite3Path -PassThru
 
-    while (($Setup.MainWindowTitle -ne 'AI Suite 3 Setup') -and (((Get-Date) - $Start).Seconds -le $Wait)) {
-        $Setup = Get-Process -Id $Setup.Id
+    #This will wait for the window to launch, so not a normal wait
+    while ($Setup -And ($Setup.MainWindowTitle -ne 'AI Suite 3 Setup') -And (((Get-Date) - $Start).Seconds -le $Wait)) {
+        $Setup = (Get-Process | Where-Object { $_.Id -eq $Setup.Id})
     }
 
-    $Setup.Kill()
-    if ($Setup.MainWindowTitle -ne 'AI Suite 3 Setup') {
-        Throw 'Failed to set Asus service'
+    if ($Setup -And -Not $Setup.HasExited) {
+        $Setup.Kill()
+        if ($Setup.MainWindowTitle -ne 'AI Suite 3 Setup') {
+            Throw 'Failed to set Asus service. AiSuite3 quick setup did not respond in time'
+        }
+    } else {
+        Throw 'Failed to set Asus service. AiSuite3 quick setup failed to launch'
     }
 }
 
