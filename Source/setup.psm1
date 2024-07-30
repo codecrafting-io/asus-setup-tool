@@ -144,14 +144,14 @@ function Initialize-AsusSetup {
 
     $SetupSettings | Add-Member -Type NoteProperty -Name 'HasPrevAiSuite' -Value $HasPrevAiSuite
 
-    if ((Read-Host 'Only uninstall apps?') -eq 'N') {
+    if ((Read-Host 'Only UNINSTALL apps?') -eq 'N') {
         $SetupSettings.UninstallOnly = $False
         Write-Host "`nChoose one AuraSync option:"
         Write-Host "  1 - NEW: Version 1.07.84_v2 for products launched until 2023, but it is more bloated" -ForegroundColor Cyan
         Write-Host '  2 - OLD: Version 1.07.66 is less bloated, but may not have support for products after 2020 (best for LiveDash)' -ForegroundColor Cyan
-        Write-Host '  3 - Do not install AuraSync' -ForegroundColor Cyan
+        Write-Host '  3 - Do NOT install AuraSync' -ForegroundColor Cyan
 
-        switch((Read-Host '[1] NEW [2] OLD [3] Do not install')) {
+        switch((Read-Host '[1] NEW [2] OLD [3] Do NOT install')) {
             1 {
                 $SetupSettings.HasAuraSync = $True
                 $SetupSettings.IsOldAura = $False
@@ -595,20 +595,29 @@ function Set-AsusService {
 
     Write-Host 'Set ASUS basic services and drivers through AiSuite3 quick setup...'
     $Start = Get-Date
-    $Setup = Start-Process $AiSuite3Path -PassThru
+    $AiSuite3Title = 'AI Suite 3 Setup'
+    $Setup = $null
+
+    try {
+        $Setup = Start-Process $AiSuite3Path -PassThru -ErrorAction Stop
+    } catch {
+        Write-Log $_ -Level 'DEBUG' -ErrorAction SilentlyContinue
+    }
 
     #This will wait for the window to launch, so not a normal wait
-    while ($Setup -And ($Setup.MainWindowTitle -ne 'AI Suite 3 Setup') -And (((Get-Date) - $Start).Seconds -le $Wait)) {
-        $Setup = (Get-Process | Where-Object { $_.Id -eq $Setup.Id})
+    while ($Setup -And ($Setup.MainWindowTitle -ne $AiSuite3Title) -And (((Get-Date) - $Start).Seconds -le $Wait)) {
+        #This will search instead of get the process to avoid exceptions.
+        #Look for programs with the matched title may help in edge cases of $Setup.Id is null
+        $Setup = (Get-Process | Where-Object { $_.Id -eq $Setup.Id -or $_.MainWindowTitle -eq $AiSuite3Title } | Select-Object -First 1)
     }
 
     if ($Setup -And -Not $Setup.HasExited) {
         $Setup.Kill()
-        if ($Setup.MainWindowTitle -ne 'AI Suite 3 Setup') {
-            Throw 'Failed to set Asus service. AiSuite3 quick setup did not respond in time'
+        if ($Setup.MainWindowTitle -ne $AiSuite3Title) {
+            Throw 'Failed to set ASUS basic services. AiSuite3 quick setup did not respond in time'
         }
     } else {
-        Throw 'Failed to set Asus service. AiSuite3 quick setup failed to launch'
+        Throw 'Failed to set ASUS basic services. AiSuite3 quick setup failed to launch'
     }
 }
 
