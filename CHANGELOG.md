@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.8.2
+
+- Improved AiSuite3 launch of quick setup
+
 ## v0.8.1
 
 - Minor setup questions revision
