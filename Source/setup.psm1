@@ -676,7 +676,7 @@ function Update-AsusService {
         Write-Warning "Use this to have the absolute minimum number of processes running"
 
         #This option is mainly intended for advanced users
-        if ((Read-Host 'Let ASUS drivers start with Windows?') -eq 'N') {
+        if ((Read-Host 'Let ASUS drivers start with Windows? [Y] Yes [N] No') -eq 'N') {
             Write-Host "Setting drivers to manual startup..."
             foreach ($Driver in $LockSettings.Drivers) {
                 Write-Log "Setting driver '$Driver' to manual startup" -Level 'INFO' -ErrorAction SilentlyContinue
