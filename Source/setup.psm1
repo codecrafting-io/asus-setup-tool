@@ -48,8 +48,8 @@ function Compare-SetupIntegrity {
         Resolve-Error $_ 'failed to load lock settings'
     }
 
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "7111AD3289FB09EAB4CFFEB0C44E69A5C1DF109E95B2DF4EE46BAFD2A3269BC0"
-    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "D27296B2991083D3A96A65D85FDA8CDDF6B067CAD943D105851DCECA29326D34"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\settings.json" -Value "F871C9A2D99C965103971395084BAF0A25781D103527D807F5B8F7FBEC3EF5A3"
+    $LockSettings.IntegrityList | Add-Member -Type NoteProperty -Name "..\\Source\\lock.jsonc" -Value "AAA68EAFA9D8E00CC76D8FABD41E59BF24ACE9551B32F3CF96FAE258721814BE"
 
     foreach ($File in $LockSettings.IntegrityList.PSObject.Properties) {
         try {
@@ -654,20 +654,6 @@ function Update-AsusService {
         Invoke-Expression 'sc.exe config LightingService depend= RPCSS/asComSvc' | Out-Null
     }
 
-    #To only leave ASUS services and processes running when necessary
-    if ((Read-Host 'Let ASUS services and tasks to start with Windows? [Y] Yes [N] No') -eq 'N') {
-        Write-Host 'Setting services to manual startup...'
-        Set-Service -Name 'LightingService' -StartupType Manual -ErrorAction SilentlyContinue
-        Set-Service -Name 'AsusFanControlService' -StartupType Manual -ErrorAction SilentlyContinue
-        Set-Service -Name 'asHmComSvc' -StartupType Manual -ErrorAction SilentlyContinue
-        Set-Service -Name 'asComSvc' -StartupType Manual -ErrorAction SilentlyContinue
-        Set-Service -Name 'AsusCertService' -StartupType Manual -ErrorAction SilentlyContinue
-
-        #Mostly to disable ASUS Update tasks
-        Write-Host 'Disabling ASUS tasks...'
-        Get-ScheduledTask -TaskPath '\Asus\*' | Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
-    }
-
     if (Test-Path '..\Patches\Profiles\LastProfile.xml') {
         Write-Host 'Setting profiles for LightingService...'
 
@@ -685,5 +671,38 @@ function Update-AsusService {
 
         #Wait a bit for the LightingService set the profile. A all modules setup take an while
         Start-SleepCountdown -Message 'Set new LightingService profiles in:' -Seconds 90
+        Write-Host ''
+        Write-Warning "Drivers may need to be started manually before applications and services, otherwise they won't work."
+        Write-Warning "Use this to have the absolute minimum number of processes running"
+
+        #This option is mainly intended for advanced users
+        if ((Read-Host 'Let ASUS drivers start with Windows?') -eq 'N') {
+            Write-Host "Setting drivers to manual startup..."
+            foreach ($Driver in $LockSettings.Drivers) {
+                Write-Log "Setting driver '$Driver' to manual startup" -Level 'INFO' -ErrorAction SilentlyContinue
+                try {
+                    Set-Service -Name $Driver -StartupType Manual -ErrorAction Stop
+                } catch {
+                    Write-Log $_ -Level 'DEBUG' -ErrorAction SilentlyContinue
+                }
+            }
+        }
+    }
+
+    #To only leave ASUS services and processes running when necessary
+    if ((Read-Host 'Let ASUS services and tasks to start with Windows? [Y] Yes [N] No') -eq 'N') {
+        Write-Host "Setting services to manual startup..."
+        foreach ($Service in $LockSettings.Services) {
+            Write-Log "Setting service '$Service' to manual startup" -Level 'INFO' -ErrorAction SilentlyContinue
+            try {
+                Set-Service -Name $Service -StartupType Manual -ErrorAction Stop
+            } catch {
+                Write-Log $_ -Level 'DEBUG' -ErrorAction SilentlyContinue
+            }
+        }
+
+        #Mostly to disable ASUS Update tasks
+        Write-Host 'Disabling ASUS tasks...'
+        Get-ScheduledTask -TaskPath '\Asus\*' | Disable-ScheduledTask -ErrorAction SilentlyContinue | Out-Null
     }
 }

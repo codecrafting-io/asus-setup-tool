@@ -67,7 +67,7 @@
         , "%ProgramData%\\Package Cache\\{5960FD0F-BB3B-49AF-B175-F77DC91E995A}v1.0.10"
         , "%ProgramData%\\Package Cache\\{5960FD0F-BB3B-49AF-B175-F77DC91E995A}v1.0.20"
     ],
-    "services": [
+    "Services": [
         "asComSvc"
         , "aaHMSvc"
         , "asHmComSvc"

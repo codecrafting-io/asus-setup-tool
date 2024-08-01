@@ -1,8 +1,10 @@
 # Changelog
 
-## v0.8.2
+## v0.9.0
 
+- Added advanced option to set ASUS Drivers to manual startup
 - Improved AiSuite3 launch of quick setup
+- Improved set ASUS tasks and services to manual startup
 
 ## v0.8.1
 

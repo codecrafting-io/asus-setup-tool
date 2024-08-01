@@ -57,7 +57,7 @@ The Asus Setup Tool is a PowerShell script tool that manages the setup installat
 
     ![ASUS Setup Tool installation step](/Source/Images/screen5.png?raw=true)
 
-- After the download and uninstall process, patches will be applied to the installation. If you chose to install AuraSync and/or LiveDash in this step, you can select which modules you want by typing `Y` to the next question. AuraSync has a modular component design to control a variety of devices. By default, the setup will install all modules even if you don't have the device. If you want a cleaner installation, you can check here which modules are relevant for your case. Some brand specific modules is usually to control RGB Ram with AuraSync. If you don't want to use AuraSync to control them, don't check it. However if you want to control the RAM you need to check "RAM" + the specific brand module if exist If you type `n` all modules will installed.
+- After the download and uninstall process, patches will be applied to the installation. If you chose to install AuraSync and/or LiveDash in this step, you can select which modules you want by typing `Y` to the next question. AuraSync has a modular component design to control a variety of devices. By default, the setup will install all modules even if you don't have the device. If you want a cleaner installation, you can check here which modules are relevant for your case. Some brand specific modules is usually to control RGB RAM/SSD with AuraSync. If you don't want to use AuraSync to control them, don't check it. However if you want to control the RAM/SSD you need to check "RAM" or "SSD/HD" + the specific brand module if exist If you type `n` all modules will installed.
 
     ![ASUS Setup Tool add modules](/Source/Images/screen4.png?raw=true)
 
@@ -71,9 +71,11 @@ Finally, if everything went well you now have a functional installation of AuraS
 
 ![Yea Baby](https://www.memesmonkey.com/images/memesmonkey/ba/ba0418a6baea139993fc38eb95f5da04.jpeg)
 
-## Automatic set of profiles
+## Advanced Settings: Automatic set of profiles
 
 If you create a folder "Profiles" inside "Patches" and put the files `LastProfile.xml` and `OledLastProfile.xml` from previous `LightingService` installations, the ASUS Setup Tool will set those profiles after the installation. Those profiles can be located in `%PROGRAMFILES(X86%)\LightingService` folder after installation and configuration.
+
+The ASUS Setup Tool also allows for set Drivers to manual startup if you use Automatic profiles.
 
 ## Known Issues
 
