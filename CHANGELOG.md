@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.10.0
+
+- Updated reference for UninstallTool 2.2.12.0
+- Add new file paths to be removed
+
 ## v0.9.0
 
 - Added advanced option to set ASUS Drivers to manual startup
