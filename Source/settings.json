@@ -1,5 +1,5 @@
 {
-    "Version": "0.9.0",
+    "Version": "0.10.0",
     "Setups": [
         {
             "Name": "LiveDash",
@@ -29,8 +29,8 @@
             "Name": "Armoury Crate Uninstall Tool",
             "File": "UninstallTool",
             "Url": "Armoury_Crate_Uninstall_Tool.zip",
-            "Version": "2.2.7.0",
-            "Hash": "7A80FD1E8F3A1AFF04BAB40E4E883AE14E65CF71ABC7E6B707E362F965046978"
+            "Version": "2.2.12.0",
+            "Hash": "CCA97EF94B83235A0AC3510E2ABEB2124E123F1FDFE0C3E7474FE1F5C0F9B89B"
         }
     ],
     "AsusBaseUrl": "https://dlcdnets.asus.com/pub/ASUS/mb/14Utilities",

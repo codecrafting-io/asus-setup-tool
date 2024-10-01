@@ -44,6 +44,8 @@
         , "%ProgramFiles(x86)%\\ASUS"
         , "%ProgramFiles%\\ASUS"
         , "%ProgramData%\\ASUS"
+        , "%LocalAppData%\\ASUS"
+        , "%AppData%\\asus_framework"
         , "$AuraUninstaller"
         , "$LiveDashUninstaller"
         , "%ProgramFiles(x86)%\\InstallShield Installation Information\\{AF8D8D0D-1262-4368-895E-44DA5632CD7B}"
