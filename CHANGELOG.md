@@ -3,7 +3,9 @@
 ## v0.10.0
 
 - Updated reference for UninstallTool 2.2.12.0
-- Add new file paths to be removed
+- Updated file list to remove
+- Added new file paths to be removed
+- Added to the docs info about Windows Dynamic Lighting
 
 ## v0.9.0
 

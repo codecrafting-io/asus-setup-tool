@@ -20,12 +20,13 @@ The Asus Setup Tool is a PowerShell script tool that manages the setup installat
 **NOTE: Before you proceed, note that this tool is experimental, still in early stages, provided as is and may not work or require manual tweaking.**
 
 - Create a System Restore point (recommended), [Instructions Here](https://support.microsoft.com/en-us/windows/create-a-system-restore-point-77e02e2a-3298-c869-9974-ef5658ea3be9#:~:text=In%20the%20search%20box%20on,and%20then%20select%20Create%20%3E%20OK.)
-- Download [ASUS Setup Tool here](/../../releases/download/v0.9.0/Asus-Setup-Tool.zip).
+- Download [ASUS Setup Tool here](/../../releases/download/v0.10.0/Asus-Setup-Tool.zip).
 - Extract the zip contents to a folder.
 - The [Windows core insolation](https://www.makeuseof.com/core-isolation-memory-integrity-windows/#:~:text=On%20the%20left%20side%20menu%20of%20the%20Windows%20Security%20app,the%20changes%20to%20take%20effect.) can interfere with the operation of ASUS Kernel drivers, so you may have to disable it.
 - If you have a third party antivirus, you **may have to disable file and thread security check features or even uninstall it**. After this reboot the system and then proceed. You can re-enable/re-install the antivirus later.
 - For Intel CPUs you may have to disable "Execute Disable Bit" in BIOS settings.
 - Using ArmouryCrate with AuraSync is possible but not recommended.
+- **NEW!!!**: Disable Windows Dynamic Lighting support in the BIOS if you want to control via AuraSync. ASUS has recently released a new firmware/bios update for some older and newer motherboards to control RGB via [Windows Dynamic Lighting (WDL)](https://learn.microsoft.com/en-us/windows-hardware/design/component-guidelines/dynamic-lighting-devices), which allows RGB control without the need for AuraSync/ArmouryCrate, which is a good alternative. However, there are some limitations, such as individual zone control, limited effects, out of Windows lighting and does not work well in conjunction with AuraSync (even disabling WDL).
 
 **NOTE:** AuraSync/LiveDash/AiSuite are legacy tools, which means that support may not be available for products released after 2022.
 
@@ -114,6 +115,8 @@ Inside `Source` folder have a `settings.json` configuration file which determine
 
 This was years in the making, trying to understand what's going on every spare time that I had. ASUS software still to this day is messy, bloated and potentially insecure. For many people this tool may not even be ideal to be frank, you may want to ditch ASUS products or even go for alternative software like [OpenRGB](https://openrgb.org/), [FanContol](https://getfancontrol.com/), [SignalRGB](https://signalrgb.com/).
 
+**NEW**: ASUS has recently released a new firmware/bios update for some older and newer motherboards to control RGB via [Windows Dynamic Lighting (WDL)](https://learn.microsoft.com/en-us/windows-hardware/design/component-guidelines/dynamic-lighting-devices), which allows RGB control without the need for AuraSync/ArmouryCrate, which is a good alternative. However, there are some limitations, such as individual zone control, limited effects, out of Windows lighting and does not work well in conjunction with AuraSync (even disabling WDL).
+
 One of the main issues of ASUS software, it's the **dependency nightmare**. Multiple setups depend on the same library, services and assets, but that aren't consistent between installations. ASUS has a very modular setup, which can be seen as a good thing, but not in the way it was implemented, with almost no cohesion, and end up with a lot of services and maybe unnecessary Kernel level access drivers. ASUS software has the following key software components:
 
 - ASUS COM Service (atkexCom, aka AXSP)
@@ -161,7 +164,7 @@ Knowing this, what is done here was:
 
 ## Final considerations
 
-I don't have a lot of experience with .NET or PowerShell projects, so help is welcome to this project, especially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/e82be8fd804da5d7e2997235593b554fe703b20eefaafb7dd4685cc63047248f/relations) detections, all patches assets used are from the latest ArmouryCrate, **so install them at your own risk**.
+I don't have a lot of experience with .NET or PowerShell projects, so help is welcome to this project, especially in relation to LiveDash installation. Another thing is about [VirusTotal](https://www.virustotal.com/gui/file/acebb802c9d4c369948cbe8edb0bac24ef159acb1b36ee664f04221d16914449/relations) detections, all patches assets used are from the latest ArmouryCrate, **so install them at your own risk**.
 
 This tool was making in the feeling of **REALLY NOT LIKING ARMOURY CRATE**. I hope this helps to finally bring some balance to the force 😁
 
